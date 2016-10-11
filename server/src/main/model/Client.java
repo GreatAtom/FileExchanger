@@ -23,7 +23,7 @@ public class Client {
     }
 
     private static boolean valideLoginOrPass(String str) {
-        if (str != null && str.length() > 5 && str.length() < 11)
+        if (str != null && str.trim().length() > 5 && str.trim().length() < 11)
             return true;
         return false;
     }
@@ -45,8 +45,8 @@ public class Client {
     }
 
     public static Client tryCreateClient(String login, String pass) {
-        login = login.trim();
-        pass = pass.trim();
+        login = login;
+        pass = pass;
 
         if (valideLoginOrPass(login) && valideLoginOrPass(pass)) {
             MessageDigest md = null;

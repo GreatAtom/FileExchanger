@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static main.model.socket.Server.BUFFER_SIZE;
+import static main.model.socket.Server.reedLineFromClient;
 
 /**
  * Created by Anton on 02.10.2016.
@@ -43,10 +44,11 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
                 mServer.addClient(socketChannel);
 
                 ByteBuffer inputBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
-                ReadWriteCompletionHandler readWriteCompletionHandler = new ReadWriteCompletionHandler(socketChannel, inputBuffer, mServer, client);
+                ReadWriteCompletionHandler readWriteCompletionHandler
+                        = new ReadWriteCompletionHandler(socketChannel, inputBuffer, mServer, client);
 
-                if(client.getDir().isDirUpdates()) {
-                    socketChannel.write(ByteBuffer.wrap(((String)"README.MD").getBytes()));
+                if (client.getDir().isDirUpdates()) {
+                    socketChannel.write(ByteBuffer.wrap(((String) "README.MD").getBytes()));
                     client.getDir().setDirUpdates(false);
                 }
 
@@ -64,7 +66,7 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
 
         } catch (InterruptedException | ExecutionException | IOException e) {
             e.printStackTrace();
-        }catch (TimeoutException e) {
+        } catch (TimeoutException e) {
             System.out.println("close connection");
         }
     }
@@ -72,25 +74,5 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
     @Override
     public void failed(Throwable arg0, Void arg1) {
 
-    }
-
-    private String reedLineFromClient(AsynchronousSocketChannel socketChannel) throws ExecutionException, InterruptedException, TimeoutException {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
-        int bytesRead = 0;
-        bytesRead = socketChannel.read(byteBuffer).get(20, TimeUnit.SECONDS);
-
-        // Make the buffer ready to read
-        byteBuffer.flip();
-
-        // Convert the buffer into a line
-        if (bytesRead > 0) {
-            byte[] lineBytes = new byte[bytesRead];
-            byteBuffer.get(lineBytes, 0, bytesRead);
-            String line = new String(lineBytes);
-
-            return line;
-        }
-
-        return null;
     }
 }

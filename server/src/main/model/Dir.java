@@ -5,8 +5,10 @@ package main.model;
  */
 public class Dir {
     private boolean dirUpdates;
+    private String  mToken;
 
     public Dir(String token) {
+        mToken = token;
         dirUpdates = true;
     }
 
@@ -18,5 +20,7 @@ public class Dir {
         this.dirUpdates = dirUpdates;
     }
 
-    /*TODO  dir*/
+    public String getmToken() {
+        return mToken;
+    }
 }

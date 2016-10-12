@@ -28,6 +28,8 @@ public class Options extends AbstractForm {
             public void actionPerformed(ActionEvent e) {
                 try {
                     commonService.getPropertyService().saveProperty(propertyFormFormToMap());
+                    //// TODO: 12.10.2016
+                    System.out.println("Настройки успешно сохранены");
                     frame.dispose();
                 }
                 catch (NumberFormatException exception) {

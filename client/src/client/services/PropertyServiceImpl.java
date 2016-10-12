@@ -26,7 +26,12 @@ public class PropertyServiceImpl implements PropertyService {
 
     private void setProperty(Map<String, String> property) {
         host = getProperty(property, PROP_HOST);
-        port = Integer.valueOf(getProperty(property, PROP_PORT));
+        try {
+            port = Integer.valueOf(getProperty(property, PROP_PORT));
+        }
+        catch (NumberFormatException e){
+            port = Integer.valueOf(getProperty(null, PROP_PORT));
+        }
     }
 
     /**
@@ -93,7 +98,10 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     private String getProperty(Map<String, String> property, String key){
-        String value = property.get(key);
+        String value = null;
+        if(property!=null) {
+            value = property.get(key);
+        }
         if(value==null || value.trim().equals("")){
             value = getDefaultProperty().get(key);
         }
@@ -105,7 +113,7 @@ public class PropertyServiceImpl implements PropertyService {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String line;
         while ((line = reader.readLine()) != null) {
-            String[] prop = line.trim().toLowerCase().split("=");
+            String[] prop = line.trim().split("=");
             property.put(prop[0], prop[1]);
         }
         return property;

@@ -10,15 +10,12 @@ class FileSender {
     public static final String SEND_FILE_FLAG = "fileRec";
     private static final int FILE_BUFFER_SIZE = 65536;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException {
         FileSender nioClient = new FileSender();
         SocketChannel socketChannel = nioClient.createChannel();
-        try {
-            nioClient.sendFile(socketChannel, "D://Anton/download/root.zip");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        nioClient.sendFile(socketChannel, "D://Anton/download/root.zip");
+        Thread.sleep(10000);
+        socketChannel.close();
     }
 
     public void sendFile(SocketChannel socketChannel, String filePath) throws IOException {
@@ -80,6 +77,8 @@ class FileSender {
             System.out.println("qqqq");
             buffer.clear();
         }
+        aFile.close();
+
         String mess = "";
         ByteBuffer bufferedReader = ByteBuffer.allocate(1024);
         while (mess.equals("COMPLETED")) {
@@ -88,14 +87,6 @@ class FileSender {
             bufferedReader.clear();
         }
 
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        socketChannel.close();
-        aFile.close();
 
     }
 

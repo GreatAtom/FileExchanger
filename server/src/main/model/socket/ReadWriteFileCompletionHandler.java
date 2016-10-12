@@ -75,14 +75,7 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
                 mInputBuffer.flip();
                 fileChannel.write(mInputBuffer);
                 mInputBuffer.clear();
-                System.out.println("bytes: "+bytes);
-                System.out.println("readBytes: "+readBytes);
-                System.out.println("mFile.getSize(): "+mFile.getSize());
             } while ((readBytes < mFile.getSize()));
-
-            String message = "COMPLETED";
-            ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(), 0, message.getBytes().length);
-            mChannel.write(byteBuffer);
 
         } catch (InterruptedException | ExecutionException | IOException e) {
             e.printStackTrace();
@@ -94,5 +87,10 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
                 e1.printStackTrace();
             }
         }
+
+        String message = "COMPLETED";
+        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(), 0, message.getBytes().length);
+        mChannel.write(byteBuffer);
+
     }
 }

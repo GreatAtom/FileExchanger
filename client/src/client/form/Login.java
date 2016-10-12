@@ -1,6 +1,6 @@
 package client.form;
 
-import client.services.CommonService;
+import client.services.FileClientMainService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,8 +22,8 @@ public class Login extends AbstractForm {
 
     private LoginListener loginListener;
 
-    public Login(CommonService commonService) {
-        super(commonService);
+    public Login(FileClientMainService fileClientMainService) {
+        super(fileClientMainService);
         loginPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         passwordPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));

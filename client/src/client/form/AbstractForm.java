@@ -1,19 +1,19 @@
 package client.form;
 
-import client.services.CommonService;
+import client.services.FileClientMainService;
 
 /**
  * Created by Dmitry on 12.10.2016.
  */
 abstract public class AbstractForm {
 
-    protected CommonService commonService;
+    protected FileClientMainService fileClientMainService;
 
-    public AbstractForm(CommonService commonService) {
-        this.commonService = commonService;
+    public AbstractForm(FileClientMainService fileClientMainService) {
+        this.fileClientMainService = fileClientMainService;
     }
 
-    public CommonService getCommonService() {
-        return commonService;
+    public FileClientMainService getFileClientMainService() {
+        return fileClientMainService;
     }
 }

@@ -9,11 +9,13 @@ import java.util.*;
 public class PropertyServiceImpl implements PropertyService {
     private final static String DEFAULT_HOST = "localhost";
     private final static int DEFAULT_PORT = 8989;
+    private final static String DEFAULT_DESIGN = "SYS";
 
     private Map<String, String> defaultProperty = initDefaultProperty();
 
     private String host;
     private int port;
+    private String design;
 
     public PropertyServiceImpl() {
         initProperty();
@@ -26,6 +28,7 @@ public class PropertyServiceImpl implements PropertyService {
 
     private void setProperty(Map<String, String> property) {
         host = getProperty(property, PROP_HOST);
+        design = getProperty(property, PROP_DESIGN);
         try {
             port = Integer.valueOf(getProperty(property, PROP_PORT));
         }
@@ -59,13 +62,18 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
+    public String getDesign() {
+        return design;
+    }
+
+    @Override
     public boolean saveProperty(Map<String, String> property){
-        boolean ans = updatePrpertyFromFile(property);
+        boolean ans = updatePrpertyInFile(property);
         setProperty(property);
         return ans;
     }
 
-    private boolean updatePrpertyFromFile(Map<String, String> property) {
+    private boolean updatePrpertyInFile(Map<String, String> property) {
         File file = new File("property.conf");
 
         try(FileWriter fw = new FileWriter(file)) {
@@ -94,6 +102,7 @@ public class PropertyServiceImpl implements PropertyService {
         Map<String, String> property = new HashMap<>();
         property.put(PROP_HOST, DEFAULT_HOST);
         property.put(PROP_PORT, String.valueOf(DEFAULT_PORT));
+        property.put(PROP_DESIGN, DEFAULT_DESIGN);
         return property;
     }
 

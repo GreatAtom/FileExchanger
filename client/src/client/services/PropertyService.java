@@ -8,8 +8,10 @@ import java.util.Map;
 public interface PropertyService {
      String PROP_PORT = "PROP_PORT";
      String PROP_HOST = "PROP_HOST";
+     String PROP_DESIGN = "PROP_DESIGN";
 
      String getHost();
      int getPort();
+     String getDesign();
      boolean saveProperty(Map<String, String> property);
 }

@@ -1,9 +1,12 @@
 package main.model;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
+import static main.model.socket.Server.DEFAULT_FILES_PATH;
 
 /**
  * Created by Anton on 02.10.2016.

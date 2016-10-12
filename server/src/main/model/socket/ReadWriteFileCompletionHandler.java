@@ -13,7 +13,6 @@ import java.nio.channels.FileChannel;
 import java.util.concurrent.ExecutionException;
 
 import static main.model.socket.Server.BUFFER_SIZE;
-import static main.model.socket.Server.DEFAULT_FILES_PATH;
 
 /**
  * Created by Anton on 09.10.2016.
@@ -62,21 +61,28 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
      * @param
      */
     public void readFileFromSocket(int bytes) {
-        String DirectoryPath = DEFAULT_FILES_PATH + "/" + mClient.getDir().getmToken() + "/";
-        File theDir = new File(DirectoryPath);
-        if (!theDir.exists()) theDir.mkdir();
 
-        try (RandomAccessFile aFile = new RandomAccessFile(DirectoryPath + mFile.getName(), "rw")) {
+        try (RandomAccessFile aFile = new RandomAccessFile(mClient.getDir().getPath() + mFile.getName(), "rw")) {
 
             FileChannel fileChannel = aFile.getChannel();
 
             long readBytes = bytes;
-            while (readBytes < mFile.getSize()) {
-                readBytes += mChannel.read(mInputBuffer).get();
+            //long readBytes = 0;
+
+            do {
+                long read = mChannel.read(mInputBuffer).get();
+                readBytes += (read>0) ? read : 0;
                 mInputBuffer.flip();
                 fileChannel.write(mInputBuffer);
                 mInputBuffer.clear();
-            }
+                System.out.println("bytes: "+bytes);
+                System.out.println("readBytes: "+readBytes);
+                System.out.println("mFile.getSize(): "+mFile.getSize());
+            } while ((readBytes < mFile.getSize()));
+
+            String message = "COMPLETED";
+            ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(), 0, message.getBytes().length);
+            mChannel.write(byteBuffer);
 
         } catch (InterruptedException | ExecutionException | IOException e) {
             e.printStackTrace();

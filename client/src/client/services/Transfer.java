@@ -1,4 +1,4 @@
-package client;
+package client.services;
 
 import java.io.FileInputStream;
 import java.io.OutputStream;

@@ -1,3 +1,5 @@
+package client;
+
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -5,18 +7,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 
-class FileSender {
+public class FileSender {
 
     public static final String SEND_FILE_FLAG = "fileRec";
     private static final int FILE_BUFFER_SIZE = 65536;
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        FileSender nioClient = new FileSender();
-        SocketChannel socketChannel = nioClient.createChannel();
-        nioClient.sendFile(socketChannel, "D://Anton/download/root.zip");
-        Thread.sleep(10000);
-        socketChannel.close();
-    }
 
     public void sendFile(SocketChannel socketChannel, String filePath) throws IOException {
         File file = new File(filePath);
@@ -31,26 +26,18 @@ class FileSender {
      *
      * @return
      */
-    public SocketChannel createChannel() {
+    public SocketChannel createChannel(String login, String password, String host, int port) throws IOException {
 
         SocketChannel socketChannel = null;
-        try {
-            socketChannel = SocketChannel.open();
-            SocketAddress socketAddress = new InetSocketAddress("localhost", 8989);
-            socketChannel.connect(socketAddress);
-            System.out.println("Connected..Now sending the file");
-            String str = "111111111";
-            ByteBuffer a = ByteBuffer.wrap(str.getBytes(), 0, 9);
-            socketChannel.write(a);
-            a = ByteBuffer.wrap(str.getBytes(), 0, 9);
 
-            Thread.currentThread().sleep(100);
-            socketChannel.write(a);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        socketChannel = SocketChannel.open();
+        SocketAddress socketAddress = new InetSocketAddress(host, port);
+        socketChannel.connect(socketAddress);
+        System.out.println("Connected..Now sending the file");
+        sendString(socketChannel, login);
+        sendString(socketChannel, password);
+
+
         return socketChannel;
     }
 

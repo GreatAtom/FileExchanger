@@ -1,3 +1,5 @@
+package client;
+
 import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -5,7 +7,8 @@ import java.net.Socket;
 /**
  * Created by Anton on 07.10.2016.
  */
-  class Transfer {
+@Deprecated
+class Transfer {
 
     public static void main(String[] args) {
         final String largeFile = "D://Anton/download/root.zip";

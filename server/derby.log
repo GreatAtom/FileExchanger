@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Thu Oct 13 23:21:37 MSK 2016:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-0157-bfb5-0fed-000004ba42a0 
+on database directory C:\Users\Dmitry\IdeaProjects\FileExchanger_anton\server\target\demoDB with class loader ClassRealm[plugin>com.mysema.querydsl:querydsl-maven-plugin:3.7.4, parent: sun.misc.Launcher$AppClassLoader@55f96302] 
+Loaded from file:/C:/Users/Dmitry/.m2/repository/org/apache/derby/derby/10.12.1.1/derby-10.12.1.1.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_77-b03
+user.dir=C:\Users\Dmitry\IdeaProjects\FileExchanger_anton\server
+os.name=Windows 7
+os.arch=amd64
+os.version=6.1
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''

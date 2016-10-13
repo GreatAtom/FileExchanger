@@ -6,6 +6,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 
 /**
  * Created by Dmitry on 12.10.2016.
@@ -42,8 +44,16 @@ public class Login extends AbstractForm {
     }
 
     private boolean validateAccount(String login, String password) {
-        //// TODO: 12.10.2016
-        return true;
+        try {
+            fileClientMainService.createChanel(login, password);
+            System.out.println("good link!");
+            return true;
+        } catch (AccessDeniedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public void start(){

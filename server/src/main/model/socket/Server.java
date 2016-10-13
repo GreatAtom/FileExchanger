@@ -30,8 +30,7 @@ public class Server extends Thread {
      * List of current connections
      */
     private AsynchronousServerSocketChannel mListener;
-    private final List<AsynchronousSocketChannel> mConnections = Collections
-            .synchronizedList(new LinkedList<AsynchronousSocketChannel>());
+    private final List<AsynchronousSocketChannel> mConnections = Collections.synchronizedList(new LinkedList<AsynchronousSocketChannel>());
     private int mPORT;
     private ServerSocket mServerSocket = null;
 

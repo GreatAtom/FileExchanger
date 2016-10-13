@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Created by Dmitry on 12.10.2016.
@@ -22,6 +23,7 @@ public class FileClient extends AbstractForm implements Login.LoginListener{
     private JTextField selectedFileTextField;
     private JButton chooseFileButton;
     private JPanel addFilePanel;
+    private JButton sendFileButton;
     private JPanel cards;
     private CardLayout cardLayout;
 
@@ -49,6 +51,14 @@ public class FileClient extends AbstractForm implements Login.LoginListener{
             }
         });
         initTable();
+        sendFileButton.addActionListener(e->{
+            try {
+                fileClientMainService.sendFile(selectedFileTextField.getText());
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                System.out.println("Ne udalos!");
+            }
+        });
     }
 
     private void initTable() {

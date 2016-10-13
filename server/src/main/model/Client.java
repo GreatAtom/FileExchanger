@@ -51,7 +51,7 @@ public class Client {
         login = login;
         pass = pass;
 
-        if (valideLoginOrPass(login) && valideLoginOrPass(pass)) {
+        if (valideUser(login, pass)) {
             MessageDigest md = null;
             try {
                 String prepToken = login + pass + "SALT";
@@ -75,5 +75,15 @@ public class Client {
             }
         }
         return null;
+    }
+
+    private static boolean valideUser(String login, String pass) {
+        if(login.equals("dmitry") && pass.equals("dmitry")
+        || login.equals("anton") && pass.equals("anton")
+        ){
+            return true;
+        } else {
+            return false;
+        }
     }
 }

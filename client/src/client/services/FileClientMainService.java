@@ -9,6 +9,8 @@ import client.form.FileClient;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
+import java.nio.channels.SocketChannel;
 
 /**
  * Место хранения всех сервисов
@@ -17,7 +19,9 @@ import java.io.File;
  */
 public class FileClientMainService {
     private PropertyService propertyService;
+    private FileSenderSerive fileSenderSeirvice;
     private FileClient fileClient;
+    private SocketChannel socketChannel;
 
     public void setLookAndField(){
         String des = propertyService.getDesign();
@@ -33,6 +37,7 @@ public class FileClientMainService {
 
     public FileClientMainService() {
         this.propertyService = new PropertyServiceImpl();
+        this.fileSenderSeirvice = new FileSenderSerive();
     }
     
     public void restart(){
@@ -52,6 +57,10 @@ public class FileClientMainService {
         fileClient.start();
     }
 
+    public FileSenderSerive getFileSenderSeirvice() {
+        return fileSenderSeirvice;
+    }
+
     public PropertyService getPropertyService() {
         return propertyService;
     }
@@ -68,5 +77,13 @@ public class FileClientMainService {
         } catch (UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
+    }
+
+    public void createChanel(String login, String password) throws IOException {
+        socketChannel = fileSenderSeirvice.createChannel(login, password, propertyService.getHost(), propertyService.getPort());
+    }
+
+    public void sendFile(String filePath) throws IOException {
+        fileSenderSeirvice.sendFile(socketChannel, filePath);
     }
 }

@@ -6,6 +6,7 @@ import main.model.FileInfo;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
@@ -18,6 +19,7 @@ import static main.model.socket.Server.BUFFER_SIZE;
  * Created by Anton on 09.10.2016.
  */
 public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer, Void> {
+    private static final String CHARSET_NAME = "UTF-8";
     private AsynchronousSocketChannel mChannel;
     private Server mServer;
     private Client mClient;
@@ -39,7 +41,11 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
             System.out.println("Closing connection to " + mChannel);
             mServer.removeClient(mChannel);
         } else {
-            readFileFromSocket(bytesRead);
+            try {
+                readFileFromSocket(bytesRead);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
             mClient.getDir().setDirUpdates(true);
             System.out.println("End of file reached...");
 
@@ -60,7 +66,7 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
      *
      * @param
      */
-    public void readFileFromSocket(int bytes) {
+    public void readFileFromSocket(int bytes) throws UnsupportedEncodingException {
 
         try (RandomAccessFile aFile = new RandomAccessFile(mClient.getDir().getPath() + mFile.getName(), "rw")) {
 
@@ -89,7 +95,7 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
         }
 
         String message = "COMPLETED";
-        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(), 0, message.getBytes().length);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length);
         mChannel.write(byteBuffer);
 
     }

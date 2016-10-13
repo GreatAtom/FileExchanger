@@ -2,7 +2,9 @@ package main.model.socket;
 
 import main.model.Client;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -20,6 +22,7 @@ import static main.model.socket.Server.reedLineFromClient;
  */
 public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSocketChannel, Void> {
 
+    private static final String CHARSET_NAME = "UTF-8";
     private AsynchronousServerSocketChannel mListener;
     private Server mServer;
 
@@ -47,14 +50,11 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
                 ReadWriteCompletionHandler readWriteCompletionHandler
                         = new ReadWriteCompletionHandler(socketChannel, inputBuffer, mServer, client);
 
-                if (client.getDir().isDirUpdates()) {
-                    socketChannel.write(ByteBuffer.wrap(((String) "README.MD").getBytes()));
-                    client.getDir().setDirUpdates(false);
-                }
-
                 socketChannel.read(inputBuffer, null, readWriteCompletionHandler);
-
+                sendMessage(socketChannel, "ACCESS_IS_ALLOWED");
+                sendFilesInfo(socketChannel, client);
             } else {
+                sendMessage(socketChannel, "ACCESS_IS_DENIED");
                 System.out.println("close connection");
 
                 if (socketChannel.isOpen()) {
@@ -69,6 +69,18 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
         } catch (TimeoutException e) {
             System.out.println("close connection");
         }
+    }
+
+    private void sendFilesInfo(AsynchronousSocketChannel socketChannel, Client client) {
+        File dir = new File(client.getDir().getPath());
+        if(dir.isDirectory()){
+            File[] files = dir.listFiles();
+        }
+    }
+
+    private void sendMessage(AsynchronousSocketChannel socketChannel, String message) throws UnsupportedEncodingException {
+        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length); //// TODO: 13.10.2016
+        socketChannel.write(byteBuffer);
     }
 
     @Override

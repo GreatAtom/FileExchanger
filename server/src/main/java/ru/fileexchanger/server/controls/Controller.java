@@ -26,22 +26,16 @@ public class Controller {
         Main.setController(this);
         stopServerButton.setDisable(true);
 
-        startServerButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                startServerButton.setDisable(true);
-                stopServerButton.setDisable(false);
-                Main.startServer();
-            }
+        startServerButton.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
+            startServerButton.setDisable(true);
+            stopServerButton.setDisable(false);
+            Main.startServer();
         });
 
-        stopServerButton.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                Main.stopServer();
-                startServerButton.setDisable(false);
-                stopServerButton.setDisable(true);
-            }
+        stopServerButton.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
+            Main.stopServer();
+            startServerButton.setDisable(false);
+            stopServerButton.setDisable(true);
         });
     }
 

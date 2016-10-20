@@ -3,6 +3,7 @@ package ru.fileexchanger.server.model.socket;
 import ru.fileexchanger.server.Main;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.ByteBuffer;
@@ -66,27 +67,6 @@ public class Server extends Thread {
             e.printStackTrace();
             closeServer();
         }
-    }
-
-    public static String reedLineFromClient(AsynchronousSocketChannel socketChannel)
-            throws ExecutionException, InterruptedException, TimeoutException {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE);
-        int bytesRead = 0;
-        bytesRead = socketChannel.read(byteBuffer).get(20, TimeUnit.SECONDS);
-
-        // Make the buffer ready to read
-        byteBuffer.flip();
-
-        // Convert the buffer into a line
-        if (bytesRead > 0) {
-            byte[] lineBytes = new byte[bytesRead];
-            byteBuffer.get(lineBytes, 0, bytesRead);
-            String line = new String(lineBytes);
-
-            return line;
-        }
-
-        return null;
     }
 
     public boolean closeServer() {

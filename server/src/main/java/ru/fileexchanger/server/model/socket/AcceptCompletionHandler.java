@@ -1,13 +1,14 @@
 package ru.fileexchanger.server.model.socket;
 
+
+import ru.fileexchanger.common.SocketUtil;
+import ru.fileexchanger.server.MainHandler;
 import ru.fileexchanger.server.dao.CommonDao;
 import ru.fileexchanger.server.model.Client;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
@@ -22,7 +23,6 @@ import java.util.concurrent.TimeoutException;
  */
 public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSocketChannel, Void> {
 
-    private static final String CHARSET_NAME = "UTF-8";
     private AsynchronousServerSocketChannel mListener;
     private Server mServer;
     private CommonDao commonDao;
@@ -35,28 +35,29 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
 
     @Override
     public void completed(AsynchronousSocketChannel socketChannel, Void arg1) {
+        System.out.println(this);
         System.out.println("client connected: " + socketChannel + " " + Thread.currentThread().getId());
-
-        mListener.accept(null, this);
+        //mListener.accept(null, this); //не уверен, что это нужно
 
         try {
-            String login = Server.reedLineFromClient(socketChannel);
-            String password = Server.reedLineFromClient(socketChannel);
+            String login = SocketUtil.formatUtf16(SocketUtil.readMessage(socketChannel, SocketUtil.LOGIN_LENGTH));
+            String password = SocketUtil.formatUtf16(SocketUtil.readMessage(socketChannel, SocketUtil.LOGIN_LENGTH));
 
             Client client = tryCreateClient(login, password);
             if (client != null && mListener.isOpen()) {
                 System.out.println(client.getmLogin() + " " + client.getmPassword() + " " + client.getmToken());
                 mServer.addClient(socketChannel);
+                SocketUtil.sendMessage(socketChannel, "200");
+                new MainHandler(client, socketChannel);//.start();
+                System.out.println("Работа пошла-поехала дальше");
 
-                ByteBuffer inputBuffer = ByteBuffer.allocateDirect(Server.BUFFER_SIZE);
-                ReadWriteCompletionHandler readWriteCompletionHandler
-                        = new ReadWriteCompletionHandler(socketChannel, inputBuffer, mServer, client);
+                //ByteBuffer inputBuffer = ByteBuffer.allocateDirect(Server.BUFFER_SIZE);
+                //ReadWriteCompletionHandler readWriteCompletionHandler = new ReadWriteCompletionHandler(socketChannel, inputBuffer, mServer, client);
 
-                socketChannel.read(inputBuffer, null, readWriteCompletionHandler);
-                sendMessage(socketChannel, "ACCESS_IS_ALLOWED");
-                sendFilesInfo(socketChannel, client);
+                //socketChannel.read(inputBuffer, null, readWriteCompletionHandler);
+
             } else {
-                sendMessage(socketChannel, "ACCESS_IS_DENIED");
+                SocketUtil.sendMessage(socketChannel, "403");
                 System.out.println("close connection");
 
                 if (socketChannel.isOpen()) {
@@ -71,18 +72,6 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
         } catch (TimeoutException e) {
             System.out.println("close connection");
         }
-    }
-
-    private void sendFilesInfo(AsynchronousSocketChannel socketChannel, Client client) {
-        File dir = new File(client.getDir().getPath());
-        if(dir.isDirectory()){
-            File[] files = dir.listFiles();
-        }
-    }
-
-    private void sendMessage(AsynchronousSocketChannel socketChannel, String message) throws UnsupportedEncodingException {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length); //// TODO: 13.10.2016
-        socketChannel.write(byteBuffer);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package ru.fileexchanger.server.model.socket;
 
+import ru.fileexchanger.common.SocketUtil;
 import ru.fileexchanger.server.model.Client;
 import ru.fileexchanger.server.model.FileInfo;
 
@@ -10,13 +11,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.nio.channels.FileChannel;
+import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Anton on 09.10.2016.
  */
 public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer, Void> {
-    private static final String CHARSET_NAME = "UTF-8";
     private AsynchronousSocketChannel mChannel;
     private Server mServer;
     private Client mClient;
@@ -92,7 +93,7 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
         }
 
         String message = "COMPLETED";
-        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(SocketUtil.CHARSET_NAME), 0, message.getBytes(SocketUtil.CHARSET_NAME).length);
         mChannel.write(byteBuffer);
 
     }

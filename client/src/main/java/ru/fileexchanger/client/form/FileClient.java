@@ -1,19 +1,24 @@
 package ru.fileexchanger.client.form;
 
 import ru.fileexchanger.client.services.FileClientMainService;
+import ru.fileexchanger.common.UserFileEnity;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by Dmitry on 12.10.2016.
  */
-public class FileClient extends AbstractForm implements Login.LoginListener{
+public class FileClient extends AbstractForm implements Login.LoginListener {
 
     private JFrame frame = new JFrame("FileClient");
     private JPanel mainPanel;
@@ -39,19 +44,15 @@ public class FileClient extends AbstractForm implements Login.LoginListener{
         cards.add(loginPage.getMainPanel(), "LOGIN");
         cards.add(mainPanel, "MAIN");
         addFilePanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        chooseFileButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFileChooser fileopen = new JFileChooser();
-                int ret = fileopen.showDialog(null, "Открыть файл");
-                if (ret == JFileChooser.APPROVE_OPTION) {
-                    File file = fileopen.getSelectedFile();
-                    selectedFileTextField.setText(file.getAbsolutePath());
-                }
+        chooseFileButton.addActionListener(e -> {
+            JFileChooser fileopen = new JFileChooser();
+            int ret = fileopen.showDialog(null, "Открыть файл");
+            if (ret == JFileChooser.APPROVE_OPTION) {
+                File file = fileopen.getSelectedFile();
+                selectedFileTextField.setText(file.getAbsolutePath());
             }
         });
-        initTable();
-        sendFileButton.addActionListener(e->{
+        sendFileButton.addActionListener(e -> {
             try {
                 fileClientMainService.sendFile(selectedFileTextField.getText());
             } catch (IOException e1) {
@@ -61,12 +62,10 @@ public class FileClient extends AbstractForm implements Login.LoginListener{
         });
     }
 
-    private void initTable() {
+    private void initTable(DefaultTableModel model) {
         String[] columnNames = {"File Name", "Size", "Download Size", "Status"};
-        for(int i=0; i<columnNames.length; i++) {
-            TableColumn tableColumn = new TableColumn(i);
-            tableColumn.setHeaderValue(columnNames[i]);
-            filesTable.getTableHeader().getColumnModel().addColumn(tableColumn);
+        for (int i = 0; i < columnNames.length; i++) {
+            model.addColumn(columnNames[i]);
         }
     }
 
@@ -109,6 +108,16 @@ public class FileClient extends AbstractForm implements Login.LoginListener{
         this.login = login;
         this.password = password;
         cardLayout.show(cards, "MAIN");
+        java.util.List<UserFileEnity> files = fileClientMainService.getUserFiles();
+        fillFilesTable(files);
+    }
+
+    private void fillFilesTable(List<UserFileEnity> files) {
+        DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
+        initTable(model);
+        files.forEach(f ->
+            model.addRow(f.toArray())
+        );
     }
 
     public JFrame getFrame() {

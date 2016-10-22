@@ -43,4 +43,7 @@ public class Client {
         return dir;
     }
 
+    public String getFilePathById(long id) {
+        return getDir().getPath()+id;
+    }
 }

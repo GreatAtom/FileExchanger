@@ -52,6 +52,16 @@ public class UserFileEnity {
     }
 
     public Object[] toArray(){
-        return new Object[]{fileName, String.valueOf(fileSize), String.valueOf(downloadSize), "UNDEFINED"};
+        String status = FileStatus.UNDEFINED.name();
+        if(downloadSize==fileSize){
+            status = FileStatus.DOWNLOADED.name();
+        }
+        if(downloadSize<fileSize){
+            status = FileStatus.NOT_ALL.name();
+        }
+        return new Object[]{fileName, String.valueOf(fileSize), String.valueOf(downloadSize), status};
+    }
+    public  enum FileStatus {
+        UNDEFINED, DOWNLOADED, NOT_ALL
     }
 }

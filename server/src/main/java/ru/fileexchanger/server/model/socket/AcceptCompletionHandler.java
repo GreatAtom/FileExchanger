@@ -47,9 +47,8 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
             if (client != null && mListener.isOpen()) {
                 System.out.println(client.getmLogin() + " " + client.getmPassword() + " " + client.getmToken());
                 mServer.addClient(socketChannel);
-                SocketUtil.sendMessage(socketChannel, "200");
-                new MainHandler(client, socketChannel);//.start();
-                System.out.println("Работа пошла-поехала дальше");
+                SocketUtil.sendMessage(socketChannel, SocketUtil.GOOD_CONNECTION_CODE);
+                new MainHandler(client, socketChannel).start();
 
                 //ByteBuffer inputBuffer = ByteBuffer.allocateDirect(Server.BUFFER_SIZE);
                 //ReadWriteCompletionHandler readWriteCompletionHandler = new ReadWriteCompletionHandler(socketChannel, inputBuffer, mServer, client);

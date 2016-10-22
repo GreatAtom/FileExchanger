@@ -108,7 +108,7 @@ public class FileClientMainService {
         return userFiles;
     }
 
-    public void sendFile(String filePath) throws IOException {
+    public void sendFile(String filePath) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         fileSenderSeirvice.sendFile(socketChannel, filePath);
     }
 }

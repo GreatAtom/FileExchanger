@@ -6,13 +6,12 @@ package ru.fileexchanger.server.model;
 public class FileInfo {
 
     private long size;
+    private String name;
 
     private FileInfo(String name, long size) {
         this.size = size;
         this.name = name;
     }
-
-    private String name;
 
     public long getSize() {
         return size;

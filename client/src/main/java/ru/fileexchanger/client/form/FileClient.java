@@ -55,7 +55,7 @@ public class FileClient extends AbstractForm implements Login.LoginListener {
         sendFileButton.addActionListener(e -> {
             try {
                 fileClientMainService.sendFile(selectedFileTextField.getText());
-            } catch (IOException e1) {
+            } catch (Exception e1) {
                 e1.printStackTrace();
                 System.out.println("Ne udalos!");
             }

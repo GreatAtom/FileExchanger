@@ -51,12 +51,30 @@ public class CommonDao {
         return files;
     }
 
-    public int insertFile(UserFileEnity fileEnity) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement("insert into USERFILES values(?, ?, ?)");
-        preparedStatement.setString(1, fileEnity.getUserLogin());
-        preparedStatement.setString(2, fileEnity.getFileName());
-        preparedStatement.setLong(3, fileEnity.getFileSize());
-        return preparedStatement.executeUpdate();
+    public long insertFile(String userLogin, String fileName, long fileSize) throws SQLException {
+        long id = loadMaxFileId()+1;
+        PreparedStatement preparedStatement = connection.prepareStatement("insert into USERFILES values(?, ?, ?, ?)");
+        preparedStatement.setLong(1, id);
+        preparedStatement.setString(2, userLogin);
+        preparedStatement.setString(3, fileName);
+        preparedStatement.setLong(4, fileSize);
+        preparedStatement.executeUpdate();
+        return id;
+    }
+
+    private long loadMaxFileId() throws SQLException {
+        PreparedStatement statement = connection.prepareStatement("select max(fileId) from USERFILES");
+        ResultSet rs = statement.executeQuery();
+        rs.next();
+        try {
+            int id = rs.getInt(1);
+            System.out.println("Max id: "+id);
+            return id;
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     private void createConnection()

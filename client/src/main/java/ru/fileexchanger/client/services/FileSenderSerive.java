@@ -12,11 +12,12 @@ import java.nio.file.AccessDeniedException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
+
 public class FileSenderSerive {
 
     private static final int FILE_BUFFER_SIZE = 65536;
 
-    public void sendFile(SocketChannel socketChannel, String filePath) throws IOException {
+    public void sendFile(SocketChannel socketChannel, String filePath) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         File file = new File(filePath);
         if (!file.isFile()) {
             throw new FileNotFoundException("Файла по указанному пути не существует");
@@ -40,8 +41,8 @@ public class FileSenderSerive {
         SocketUtil.sendMessage(socketChannel, SocketUtil.format(login, SocketUtil.LOGIN_LENGTH));
         SocketUtil.sendMessage(socketChannel, SocketUtil.format(password, SocketUtil.PASSWORD_LENGTH));
         System.out.println("Try to read aswer from server");
-        String mess = SocketUtil.readMessage(socketChannel, 3);
-        if(mess.equals("200")) {
+        String mess = SocketUtil.readCode(socketChannel);
+        if(mess.equals(SocketUtil.GOOD_CONNECTION_CODE)) {
             System.out.println("Correct login and password");
             return socketChannel;
         } else {
@@ -53,10 +54,10 @@ public class FileSenderSerive {
     }
 
 
-    public void sendFile(SocketChannel socketChannel, File file) throws IOException {
+    public void sendFile(SocketChannel socketChannel, File file) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         System.out.println("Try to send file: "+file.getName());
         String fileName = file.getName();
-        SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_COD);
+        SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_CODE);
         SocketUtil.sendMessage(socketChannel, SocketUtil.format(fileName, SocketUtil.FILE_NAME_LENGTH));
         SocketUtil.sendMessage(socketChannel, SocketUtil.format(file.length(), SocketUtil.FILE_SIZE_LENGTH));
 
@@ -66,26 +67,32 @@ public class FileSenderSerive {
         RandomAccessFile aFile = new RandomAccessFile(file, "r");
         FileChannel inChannel = aFile.getChannel();
         //inChannel.position(completeFileSize);//// TODO: 12.10.2016 проверить
+        String code = SocketUtil.readCode(socketChannel);
+        if(code.equals(SocketUtil.GOOD_SEND_FILE_CODE)) {
+            ByteBuffer buffer = ByteBuffer.allocate(FILE_BUFFER_SIZE);
+            while (inChannel.read(buffer) > 0) {
+                buffer.flip();
+                socketChannel.write(buffer);
+                System.out.println("qqqq");
+                buffer.clear();
+            }
+            aFile.close();
 
-        ByteBuffer buffer = ByteBuffer.allocate(FILE_BUFFER_SIZE);
-        while (inChannel.read(buffer) > 0) {
-            buffer.flip();
-            socketChannel.write(buffer);
-            System.out.println("qqqq");
-            buffer.clear();
+            String mess = "";
+            System.out.println("Try to read answer from server");
+            while (!mess.equals(SocketUtil.GOOD_CODE)){
+                mess = SocketUtil.readCode(socketChannel);
+            }
+            /*ByteBuffer bufferedReader = ByteBuffer.allocate(1024);
+            while (!mess.equals(SocketUtil.GOOD_CODE)) { //// TODO: 22.10.2016 why  mess.equals(GOOD_CODE) ??
+                socketChannel.read(bufferedReader);
+                System.out.println("read");
+                mess = bufferedReader.toString();
+                bufferedReader.clear();
+            }*/
+        } else {
+            System.out.println("Server is not ready to receive file");
         }
-        aFile.close();
-
-        String mess = "";
-        System.out.println("Try to read answer from server");
-        ByteBuffer bufferedReader = ByteBuffer.allocate(1024);
-        while (mess.equals("201")) {
-            socketChannel.read(bufferedReader);
-            System.out.println("read");
-            mess = bufferedReader.toString();
-            bufferedReader.clear();
-        }
-
 
     }
 

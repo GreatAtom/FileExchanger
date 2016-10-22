@@ -52,7 +52,7 @@ class ReadWriteCompletionHandler implements CompletionHandler<Integer, Void> {
             String message = new String(decodeFrame);
             mInputBuffer.clear();
 
-            if (message.equals(SocketUtil.SEND_FILE_COD)) {
+            if (message.equals(SocketUtil.SEND_FILE_CODE)) {
                 System.out.println("receive file");
 
                 try {

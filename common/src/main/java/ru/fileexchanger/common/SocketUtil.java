@@ -15,7 +15,13 @@ import java.util.concurrent.TimeoutException;
 public class SocketUtil {
 
     public static final String CHARSET_NAME = "UTF-8";
-    public static final String SEND_FILE_COD = "901";
+
+    public static final String GOOD_CONNECTION_CODE = "200";
+    public static final String GOOD_CODE = "201";
+    public static final String SEND_FILE_CODE = "901";
+    public static final String GOOD_SEND_FILE_CODE ="902";
+    public static final String DONT_SEND_FILE_CODE ="905";
+
     public static final int LOGIN_LENGTH = 32;
     public static final int PASSWORD_LENGTH = 32;
 
@@ -23,6 +29,8 @@ public class SocketUtil {
     public static final int FILE_SIZE_LENGTH = 64;
 
     private static final int DEFAULT_TIMEOUT = 20;
+    private static final int COD_LENGTH = 3;
+
 
     public static String format(String message, int length) {
         if (message.length() > length) {
@@ -50,24 +58,31 @@ public class SocketUtil {
      * @throws TimeoutException
      */
     public static String readMessage(AsynchronousSocketChannel socketChannel, final int size, int timeout) throws ExecutionException, InterruptedException, TimeoutException, UnsupportedEncodingException {
-        //int size = length*2;
+        System.out.println("Try to read message, length: "+size);
         ByteBuffer byteBuffer = ByteBuffer.allocate(size);
         byteBuffer.clear();
         int read = socketChannel.read(byteBuffer).get(timeout, TimeUnit.SECONDS);
-        return new String(byteBuffer.array(), 0, read, CHARSET_NAME);
+        String message = new String(byteBuffer.array(), 0, read, CHARSET_NAME);
+        System.out.println("Message has read: "+message);
+        return message;
 
     }
 
     public static String readMessage(SocketChannel socketChannel, final int size) throws ExecutionException, InterruptedException, TimeoutException, IOException {
+        System.out.println("Try to read message, length: "+size);
         String ans = "";
-        //int size = length*2;
         ByteBuffer byteBuffer = ByteBuffer.allocate(size);
         while (ans.length()<size) {
             byteBuffer.clear();
             int read = socketChannel.read(byteBuffer);
             ans += new String(byteBuffer.array(), 0, read, CHARSET_NAME);
         }
+        System.out.println("Message has read: "+ans);
         return ans;
+    }
+
+    public static String readCode(SocketChannel socketChannel) throws ExecutionException, InterruptedException, TimeoutException, IOException {
+        return readMessage(socketChannel, COD_LENGTH);
     }
 
     public static String readMessage(AsynchronousSocketChannel socketChannel, int size) throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {

@@ -1,7 +1,6 @@
 package ru.fileexchanger.client.form;
 
-import ru.fileexchanger.client.services.FileClientMainService;
-import ru.fileexchanger.client.services.PropertyService;
+import ru.fileexchanger.client.services.Property;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -14,7 +13,7 @@ import java.util.Map;
 /**
  * Created by Dmitry on 12.10.2016.
  */
-public class Options extends AbstractForm {
+public class Options {
     private JPanel mainPanel;
     private JTextField hostTextField;
     private JTextField protTextField;
@@ -23,9 +22,10 @@ public class Options extends AbstractForm {
     private JRadioButton decoratedRadioButton;
     private JRadioButton defaultRadioButton;
     private List<JRadioButton> radioButtons = initRadioButtons();
+    private Property property;
 
-    public Options(FileClientMainService fileClientMainService) {
-        super(fileClientMainService);
+    public Options(Property property) {
+        this.property = property;
         mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         JFrame frame = new JFrame("Options");
         showProperty();
@@ -33,7 +33,7 @@ public class Options extends AbstractForm {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    fileClientMainService.getPropertyService().saveProperty(propertyFormFormToMap());
+                    property.saveProperty(propertyFormFormToMap());
                     //// TODO: 12.10.2016
                     System.out.println("Настройки успешно сохранены");
                     frame.dispose();
@@ -54,8 +54,7 @@ public class Options extends AbstractForm {
 
 
     private void showProperty() {
-        PropertyService propertyService = fileClientMainService.getPropertyService();
-        String design = propertyService.getDesign();
+        String design = property.getDesign();
         for (int i = 0; i < radioButtons.size(); i++) {
             JRadioButton r = radioButtons.get(i);
             String rName = r.getName();
@@ -64,17 +63,15 @@ public class Options extends AbstractForm {
             }
 
         }
-        //radioButtons.stream().forEach(r->{if(r==null){return;}if(r.getName().equals(design)){r.setSelected(true);selectingRaduoButton = design;}});
-        hostTextField.setText(propertyService.getHost());
-        protTextField.setText(String.valueOf(propertyService.getPort()));
+        hostTextField.setText(property.getHost());
+        protTextField.setText(String.valueOf(property.getPort()));
     }
 
     private Map<String, String> propertyFormFormToMap() {
-        PropertyService propertyService = fileClientMainService.getPropertyService();
         Map<String, String> property = new HashMap<>();
-        property.put(PropertyService.PROP_PORT, Integer.valueOf(protTextField.getText()).toString());
-        property.put(PropertyService.PROP_HOST, hostTextField.getText());
-        property.put(PropertyService.PROP_DESIGN, getDesignFromForm());
+        property.put(Property.PROP_PORT, Integer.valueOf(protTextField.getText()).toString());
+        property.put(Property.PROP_HOST, hostTextField.getText());
+        property.put(Property.PROP_DESIGN, getDesignFromForm());
         return property;
     }
 
@@ -95,8 +92,5 @@ public class Options extends AbstractForm {
         radioButtons.add(defaultRadioButton);
         return radioButtons;
     }
-
-
-
 
 }

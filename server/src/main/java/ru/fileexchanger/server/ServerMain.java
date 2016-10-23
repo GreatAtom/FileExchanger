@@ -12,13 +12,13 @@ import ru.fileexchanger.server.model.socket.Server;
 import java.util.List;
 import java.util.concurrent.*;
 
-public class Main extends Application {
+public class ServerMain extends Application {
 
     private static Server server;
     private static Controller controller;
 
     public static void setController(Controller controller) {
-        Main.controller = controller;
+        ServerMain.controller = controller;
     }
 
     public static void updateListView(List<String> list) {

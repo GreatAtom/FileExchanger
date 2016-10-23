@@ -1,6 +1,6 @@
 package ru.fileexchanger.client.form;
 
-import ru.fileexchanger.client.services.FileClientMainService;
+import ru.fileexchanger.client.services.FileSenderService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by Dmitry on 12.10.2016.
  */
-public class Login extends AbstractForm {
+public class Login  {
     private JTextField textField1;
     private JPanel mainPanel;
     private JPanel loginPanel;
@@ -23,11 +23,12 @@ public class Login extends AbstractForm {
     private JPasswordField passwordField1;
     private JButton loginButton;
     private JPanel basePanel;
-
     private LoginListener loginListener;
 
-    public Login(FileClientMainService fileClientMainService) {
-        super(fileClientMainService);
+    private FileSenderService fileSenderService;
+
+    public Login(FileSenderService fileSenderService) {
+        this.fileSenderService = fileSenderService;
         loginPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         passwordPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -47,7 +48,7 @@ public class Login extends AbstractForm {
 
     private boolean validateAccount(String login, String password) {
         try {
-            fileClientMainService.createChanel(login, password);
+            fileSenderService.createChanel(login, password);
             System.out.println("good link!");
             return true;
         } catch (AccessDeniedException e) {

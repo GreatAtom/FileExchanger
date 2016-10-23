@@ -1,6 +1,9 @@
 package ru.fileexchanger.client.services;
 
+import com.google.gson.Gson;
 import ru.fileexchanger.common.SocketUtil;
+import ru.fileexchanger.common.UserFileEnity;
+import ru.fileexchanger.common.UserInfo;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -9,32 +12,49 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.AccessDeniedException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 
-public class FileSenderSerive {
+public class FileSenderService {
 
     private static final int FILE_BUFFER_SIZE = 65536;
+    private SocketChannel socketChannel;
 
-    public void sendFile(SocketChannel socketChannel, String filePath) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    private Property property;
+
+    public void sendFile(String filePath) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         File file = new File(filePath);
         if (!file.isFile()) {
             throw new FileNotFoundException("Файла по указанному пути не существует");
         }
-        sendFile(socketChannel, file);
+        sendFile(file);
     }
+
+    /**
+     * Запрашивает у сервера список файлов юзера
+     * @return
+     * @throws IOException
+     */
+    public List<UserFileEnity> getUpdatedUserFiles() throws IOException {
+        System.out.println("Try to read File Info");
+        SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_INFO_CODE);
+        String userInfoString = SocketUtil.readMessage(socketChannel);
+        System.out.println("File info has read:\n"+ userInfoString);
+        UserInfo userInfo =  new Gson().fromJson(userInfoString, UserInfo.class);
+        return userInfo.getFileEnityList();
+    }
+
 
     /**
      * Establishes a socket channel connection
      *
      * @return
      */
-    public SocketChannel createChannel(String login, String password, String host, int port) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    private SocketChannel createChannel(String login, String password, String host, int port) throws IOException, InterruptedException, ExecutionException, TimeoutException {
 
-        SocketChannel socketChannel = null;
-
-        socketChannel = SocketChannel.open();
+        SocketChannel socketChannel = SocketChannel.open();
         SocketAddress socketAddress = new InetSocketAddress(host, port);
         socketChannel.connect(socketAddress);
         System.out.println("Connected..Now sending the login and password");
@@ -53,8 +73,13 @@ public class FileSenderSerive {
         }
     }
 
+    public void createChanel(String login, String password) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+        socketChannel = createChannel(login, password, property.getHost(), property.getPort());
+        System.out.println("Chanel has created");
+    }
 
-    public void sendFile(SocketChannel socketChannel, File file) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+
+    private void sendFile(File file) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         System.out.println("Try to send file: "+file.getName());
         String fileName = file.getName();
         SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_CODE);
@@ -83,45 +108,12 @@ public class FileSenderSerive {
             while (!mess.equals(SocketUtil.GOOD_CODE)){
                 mess = SocketUtil.readCode(socketChannel);
             }
-            /*ByteBuffer bufferedReader = ByteBuffer.allocate(1024);
-            while (!mess.equals(SocketUtil.GOOD_CODE)) { //// TODO: 22.10.2016 why  mess.equals(GOOD_CODE) ??
-                socketChannel.read(bufferedReader);
-                System.out.println("read");
-                mess = bufferedReader.toString();
-                bufferedReader.clear();
-            }*/
         } else {
             System.out.println("Server is not ready to receive file");
         }
-
     }
 
-/*    private void sendMessage(SocketChannel socketChannel, String message) throws IOException {
-        System.out.println("Try to send message: "+message);
-        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length);
-        socketChannel.write(byteBuffer);
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Message has send: "+message);
+    public void setProperty(Property property) {
+        this.property = property;
     }
-
-    public String readMessage(SocketChannel socketChannel) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder();
-        ByteBuffer byteBuffer = ByteBuffer.allocate(2048);
-        int read;
-        do {
-            read = socketChannel.read(byteBuffer);
-            if(read>0) {
-                stringBuilder.append(new String(byteBuffer.array(), 0, read, "UTF-16"));
-                byteBuffer.clear();
-                byteBuffer.flip();
-            }
-        }
-        while (read>0);
-
-        return stringBuilder.toString();
-    }*/
 }

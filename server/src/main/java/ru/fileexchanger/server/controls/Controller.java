@@ -2,12 +2,11 @@ package ru.fileexchanger.server.controls;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
-import ru.fileexchanger.server.Main;
+import ru.fileexchanger.server.ServerMain;
 
 import java.util.List;
 
@@ -23,17 +22,17 @@ public class Controller {
 
     @FXML
     public void initialize() {
-        Main.setController(this);
+        ServerMain.setController(this);
         stopServerButton.setDisable(true);
 
         startServerButton.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
             startServerButton.setDisable(true);
             stopServerButton.setDisable(false);
-            Main.startServer();
+            ServerMain.startServer();
         });
 
         stopServerButton.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEvent -> {
-            Main.stopServer();
+            ServerMain.stopServer();
             startServerButton.setDisable(false);
             stopServerButton.setDisable(true);
         });

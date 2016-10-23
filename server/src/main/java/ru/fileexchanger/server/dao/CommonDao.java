@@ -93,4 +93,11 @@ public class CommonDao {
     }
 
 
+    public void clearFileInfo() {
+        try {
+            connection.createStatement().execute("delete from USERFILES");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

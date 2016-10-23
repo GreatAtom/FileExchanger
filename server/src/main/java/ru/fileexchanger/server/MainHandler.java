@@ -36,7 +36,6 @@ public class MainHandler extends Thread {
         this.socketChannel = socketChannel;
         this.run = true;
         this.commonDao = new CommonDao();
-        sendFilesInfo(socketChannel, client);
     }
 
     @Override
@@ -48,6 +47,7 @@ public class MainHandler extends Thread {
                 System.out.println("cod: " + code);
                 switch (code) {
                     case SocketUtil.SEND_FILE_CODE: readFile(); break;
+                    case SocketUtil.SEND_FILE_INFO_CODE: sendFilesInfo(); break;
                 }
             }
         } catch (Exception e) {
@@ -55,21 +55,11 @@ public class MainHandler extends Thread {
         }
     }
 
-    private void sendFilesInfo(AsynchronousSocketChannel socketChannel, Client client) {
+    private void sendFilesInfo() {
         try {
             System.out.println("Try to send file info");
             System.out.println("loading file info from DB");
             List<UserFileEnity> files = getUserFilesEnitry(client);
-/*            if (files == null) {
-                UserFileEnity f = new UserFileEnity();
-                f.setId(0);
-                f.setFileSize(0);
-                f.setDownloadSize(0);
-                f.setUserLogin("-");
-                f.setFileName("-");
-                files = new ArrayList<>(1);
-                files.add(f);
-            }*/
             UserInfo userInfo = new UserInfo();
             userInfo.setFileEnityList(files);
             System.out.println("Load: 100%");

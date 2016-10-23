@@ -1,21 +1,16 @@
 package ru.fileexchanger.server.model.socket;
 
-import ru.fileexchanger.server.Main;
+import ru.fileexchanger.server.ServerMain;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -45,7 +40,7 @@ public class Server extends Thread {
                 .filter(e -> e != null)
                 .map(AsynchronousSocketChannel::toString)
                 .collect(Collectors.toList());
-        Main.updateListView(temp);
+        ServerMain.updateListView(temp);
     }
 
     public synchronized void removeClient(AsynchronousSocketChannel client) {
@@ -54,7 +49,7 @@ public class Server extends Thread {
                 .filter(e -> e != null)
                 .map(AsynchronousSocketChannel::toString)
                 .collect(Collectors.toList());
-        Main.updateListView(temp);
+        ServerMain.updateListView(temp);
     }
 
     @Override
@@ -82,7 +77,7 @@ public class Server extends Thread {
                 mListener.close();
             }
 
-            Main.updateListView(new ArrayList<String>(0));
+            ServerMain.updateListView(new ArrayList<String>(0));
 
             System.gc();
 

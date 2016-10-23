@@ -6,7 +6,12 @@ import java.util.*;
 /**
  * Created by Dmitry on 12.10.2016.
  */
-public class PropertyServiceImpl implements PropertyService {
+public class Property {
+
+    public static final String PROP_PORT = "PROP_PORT";
+    public static final String PROP_HOST = "PROP_HOST";
+    public static final String PROP_DESIGN = "PROP_DESIGN";
+
     private final static String DEFAULT_HOST = "localhost";
     private final static int DEFAULT_PORT = 8989;
     private final static String DEFAULT_DESIGN = "SYS";
@@ -17,7 +22,7 @@ public class PropertyServiceImpl implements PropertyService {
     private int port;
     private String design;
 
-    public PropertyServiceImpl() {
+    public Property() {
         initProperty();
     }
 
@@ -51,22 +56,18 @@ public class PropertyServiceImpl implements PropertyService {
 
     }
 
-    @Override
     public String getHost() {
         return host;
     }
 
-    @Override
     public int getPort() {
         return port;
     }
 
-    @Override
     public String getDesign() {
         return design;
     }
 
-    @Override
     public boolean saveProperty(Map<String, String> property){
         boolean ans = updatePrpertyInFile(property);
         setProperty(property);

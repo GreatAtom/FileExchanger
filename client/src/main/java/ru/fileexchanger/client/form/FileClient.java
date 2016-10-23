@@ -1,24 +1,20 @@
 package ru.fileexchanger.client.form;
 
-import ru.fileexchanger.client.services.FileClientMainService;
+import ru.fileexchanger.client.services.Context;
+import ru.fileexchanger.client.services.FileSenderService;
+import ru.fileexchanger.client.services.Property;
 import ru.fileexchanger.common.UserFileEnity;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
-import java.util.List;
 
 /**
  * Created by Dmitry on 12.10.2016.
  */
-public class FileClient extends AbstractForm implements Login.LoginListener {
+public class FileClient implements Login.LoginListener {
 
     private JFrame frame = new JFrame("FileClient");
     private JPanel mainPanel;
@@ -29,20 +25,26 @@ public class FileClient extends AbstractForm implements Login.LoginListener {
     private JButton chooseFileButton;
     private JPanel addFilePanel;
     private JButton sendFileButton;
+    private JButton updateButton;
+    private JPanel bottomPanel;
     private JPanel cards;
     private CardLayout cardLayout;
 
     private String login;
     private String password;
 
-    public FileClient(FileClientMainService fileClientMainService) {
-        super(fileClientMainService);
+    private FileSenderService fileSenderSerive;
+    private Property property;
+
+    public FileClient(FileSenderService fileSenderService) {
+        this.fileSenderSerive = fileSenderService;
         cardLayout = new CardLayout();
         cards = new JPanel(cardLayout);
-        Login loginPage = new Login(fileClientMainService);
+        Login loginPage = new Login(fileSenderService);
         loginPage.setLoginListener(this);
         cards.add(loginPage.getMainPanel(), "LOGIN");
         cards.add(mainPanel, "MAIN");
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         addFilePanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         chooseFileButton.addActionListener(e -> {
             JFileChooser fileopen = new JFileChooser();
@@ -54,12 +56,40 @@ public class FileClient extends AbstractForm implements Login.LoginListener {
         });
         sendFileButton.addActionListener(e -> {
             try {
-                fileClientMainService.sendFile(selectedFileTextField.getText());
+                fileSenderSerive.sendFile(selectedFileTextField.getText());
             } catch (Exception e1) {
                 e1.printStackTrace();
                 System.out.println("Ne udalos!");
             }
         });
+        updateButton.addActionListener(e-> {
+            try {
+                updateTable();
+            } catch (IOException e1) {
+                System.out.println("Не удалось обновить таблицу");
+            }
+        });
+
+        DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
+        initTable(model);
+    }
+
+    private void updateTable() throws IOException {
+        java.util.List<UserFileEnity> files = fileSenderSerive.getUpdatedUserFiles();
+
+        DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
+        removeRows(model);
+        //initTable(model);
+        files.forEach(f ->
+                model.addRow(f.toArray())
+        );
+    }
+
+    private void removeRows(DefaultTableModel model) {
+        int count = model.getRowCount();
+        for(int i=count-1; i>=0; i--) {
+            model.removeRow(i);
+        }
     }
 
     private void initTable(DefaultTableModel model) {
@@ -76,18 +106,8 @@ public class FileClient extends AbstractForm implements Login.LoginListener {
         JMenuItem menuOptions = new JMenuItem("Options");
         JMenuItem menuRestart = new JMenuItem("Restart");
 
-        menuOptions.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new Options(fileClientMainService);
-            }
-        });
-        menuRestart.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                fileClientMainService.restart();
-            }
-        });
+        menuOptions.addActionListener(e -> {new Options(property);});
+        menuRestart.addActionListener(e -> Context.restart());
         menu.add(menuOptions);
         menu.add(menuRestart);
         frame.setJMenuBar(menuBar);
@@ -108,19 +128,19 @@ public class FileClient extends AbstractForm implements Login.LoginListener {
         this.login = login;
         this.password = password;
         cardLayout.show(cards, "MAIN");
-        java.util.List<UserFileEnity> files = fileClientMainService.getUserFiles();
-        fillFilesTable(files);
-    }
-
-    private void fillFilesTable(List<UserFileEnity> files) {
-        DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
-        initTable(model);
-        files.forEach(f ->
-            model.addRow(f.toArray())
-        );
+        try {
+            updateTable();
+        } catch (IOException e) {
+            System.out.println("Не удалось обновить таблицу");
+        }
     }
 
     public JFrame getFrame() {
         return frame;
     }
+
+    public void setProperty(Property property) {
+        this.property = property;
+    }
+
 }

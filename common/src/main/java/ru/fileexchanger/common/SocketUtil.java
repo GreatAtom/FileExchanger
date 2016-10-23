@@ -18,6 +18,7 @@ public class SocketUtil {
 
     public static final String GOOD_CONNECTION_CODE = "200";
     public static final String GOOD_CODE = "201";
+    public static final String SEND_FILE_INFO_CODE = "900";
     public static final String SEND_FILE_CODE = "901";
     public static final String GOOD_SEND_FILE_CODE ="902";
     public static final String DONT_SEND_FILE_CODE ="905";

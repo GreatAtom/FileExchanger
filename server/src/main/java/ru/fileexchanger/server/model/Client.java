@@ -11,14 +11,12 @@ public class Client {
     private String mPassword;
     private String mToken;
     private Dir dir;
-    private CommonDao commonDao;
 
     public Client(String login, String pass, String token) {
         mLogin = login;
         mPassword = pass;
         mToken = token;
         dir = new Dir(token);
-        commonDao = new CommonDao();
     }
 
     private static boolean valideLoginOrPass(String str) {

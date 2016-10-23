@@ -14,7 +14,7 @@ import java.io.IOException;
 /**
  * Created by Dmitry on 12.10.2016.
  */
-public class FileClient implements Login.LoginListener {
+public class FileClient implements Login.LoginListener, FileSenderService.Informer {
 
     private JFrame frame = new JFrame("FileClient");
     private JPanel mainPanel;
@@ -27,6 +27,7 @@ public class FileClient implements Login.LoginListener {
     private JButton sendFileButton;
     private JButton updateButton;
     private JPanel bottomPanel;
+    private JLabel infoLabel;
     private JPanel cards;
     private CardLayout cardLayout;
 
@@ -59,7 +60,6 @@ public class FileClient implements Login.LoginListener {
                 fileSenderSerive.sendFile(selectedFileTextField.getText());
             } catch (Exception e1) {
                 e1.printStackTrace();
-                System.out.println("Ne udalos!");
             }
         });
         updateButton.addActionListener(e-> {
@@ -79,7 +79,6 @@ public class FileClient implements Login.LoginListener {
 
         DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
         removeRows(model);
-        //initTable(model);
         files.forEach(f ->
                 model.addRow(f.toArray(true))
         );
@@ -143,4 +142,23 @@ public class FileClient implements Login.LoginListener {
         this.property = property;
     }
 
+    @Override
+    public void writeMessage(String message) {
+        infoLabel.setText(message);
+        try {
+            updateTable();
+        } catch (IOException e) {
+            e.printStackTrace();
+            infoLabel.setText("Не удалось обновить таблицу");
+        }
+    }
+
+    @Override
+    public void fileHasSend() {
+        try {
+            updateTable();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

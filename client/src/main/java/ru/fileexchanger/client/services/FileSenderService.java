@@ -22,10 +22,46 @@ public class FileSenderService {
     private static final int FILE_BUFFER_SIZE = 65536;
     private SocketChannel socketChannel;
     private List<UserFileEnity> userFileEnities;
-
+    private volatile boolean emptyChanel = true;
     private Property property;
+    private Informer informer;
 
     public void sendFile(String filePath) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+        if(emptyChanel) {
+            emptyChanel = false;
+            new Thread(() -> {
+                try {
+                    writeInfo("Идёт загрузка");
+                    sendFileProxy(filePath);
+                    emptyChanel = true;
+                    informer.fileHasSend();
+                    writeInfo("Загрузка завершена");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    writeInfo("Ошибка. Передача файлов прервана");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    writeInfo("Ошибка. Передача файлов прервана");
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                    writeInfo("Ошибка. Передача файлов прервана");
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
+                    writeInfo("Ошибка. Передача файлов прервана");
+                }
+                finally {
+                    emptyChanel = true;
+                }
+            }).start();
+        }
+    }
+
+    private void writeInfo(String s) {
+        informer.writeMessage(s);
+
+    }
+
+    private void sendFileProxy(String filePath) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         File file = new File(filePath);
         if (!file.isFile()) {
             throw new FileNotFoundException("Файла по указанному пути не существует");
@@ -39,6 +75,7 @@ public class FileSenderService {
      * @throws IOException
      */
     public List<UserFileEnity> getUpdatedUserFiles() throws IOException {
+        if(!emptyChanel){ return userFileEnities;}
         System.out.println("Try to read File Info");
         SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_INFO_CODE);
         String userInfoString = SocketUtil.readMessage(socketChannel);
@@ -55,7 +92,7 @@ public class FileSenderService {
      * @return
      */
     private SocketChannel createChannel(String login, String password, String host, int port) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-
+        if(!emptyChanel){ return null;}
         SocketChannel socketChannel = SocketChannel.open();
         SocketAddress socketAddress = new InetSocketAddress(host, port);
         socketChannel.connect(socketAddress);
@@ -82,6 +119,7 @@ public class FileSenderService {
 
 
     private void sendFile(File file) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+
         System.out.println("Try to send file: "+file.getName());
         String fileName = file.getName();
         SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_CODE);
@@ -113,6 +151,15 @@ public class FileSenderService {
         } else {
             System.out.println("Server is not ready to receive file");
         }
+    }
+
+    public interface Informer {
+        void writeMessage(String message);
+        void fileHasSend();
+    }
+
+    public void setInformer(Informer informer) {
+        this.informer = informer;
     }
 
     public void setProperty(Property property) {

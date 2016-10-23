@@ -48,6 +48,7 @@ public class Context {
         fileSenderSeirvice.setProperty(property);
         this.fileClient = new FileClient(fileSenderSeirvice);
         fileClient.setProperty(property);
+        fileSenderSeirvice.setInformer(fileClient);
         fileClient.start();
     }
 

@@ -23,6 +23,7 @@ public class Login  {
     private JPasswordField passwordField1;
     private JButton loginButton;
     private JPanel basePanel;
+    private JLabel messageLabel;
     private LoginListener loginListener;
 
     private FileSenderService fileSenderService;
@@ -37,32 +38,25 @@ public class Login  {
             public void actionPerformed(ActionEvent e) {
                 String login = textField1.getText();
                 String password = new String(passwordField1.getPassword());
-                if(validateAccount(login, password)){
-                    loginListener.login(login, password);
-                } else {
-                    //// TODO: 12.10.2016 incorrect
-                }
+                validateAccount(login, password);
+
             }
         });
     }
 
-    private boolean validateAccount(String login, String password) {
+
+    private void validateAccount(String login, String password) {
         try {
             fileSenderService.createChanel(login, password);
             System.out.println("good link!");
-            return true;
+            loginListener.login(login, password);
         } catch (AccessDeniedException e) {
             e.printStackTrace();
-        } catch (IOException e) {
+            writeInfo("Неверный логин или пароль");
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
+            writeInfo("Ошибка соединения");
         }
-        return false;
     }
 
     public void start(){
@@ -84,6 +78,10 @@ public class Login  {
 
     public interface LoginListener {
         void login(String login, String password);
+    }
+
+    private void writeInfo(String message) {
+        messageLabel.setText(message);
     }
 
 }

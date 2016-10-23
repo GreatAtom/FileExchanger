@@ -48,9 +48,9 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
             System.out.println("End of file reached...");
 
             ByteBuffer inputBuffer = ByteBuffer.allocateDirect(Server.BUFFER_SIZE);
-            ReadWriteCompletionHandler readWriteCompletionHandler =
+            /*ReadWriteCompletionHandler readWriteCompletionHandler =
                     new ReadWriteCompletionHandler(mChannel, inputBuffer, mServer, mClient);
-            mChannel.read(inputBuffer, null, readWriteCompletionHandler);
+            mChannel.read(inputBuffer, null, readWriteCompletionHandler);*/
         }
     }
 

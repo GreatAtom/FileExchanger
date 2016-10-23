@@ -21,6 +21,7 @@ public class FileSenderService {
 
     private static final int FILE_BUFFER_SIZE = 65536;
     private SocketChannel socketChannel;
+    private List<UserFileEnity> userFileEnities;
 
     private Property property;
 
@@ -43,7 +44,8 @@ public class FileSenderService {
         String userInfoString = SocketUtil.readMessage(socketChannel);
         System.out.println("File info has read:\n"+ userInfoString);
         UserInfo userInfo =  new Gson().fromJson(userInfoString, UserInfo.class);
-        return userInfo.getFileEnityList();
+        userFileEnities = userInfo.getFileEnityList();
+        return userFileEnities;
     }
 
 

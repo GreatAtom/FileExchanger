@@ -1,6 +1,7 @@
 package ru.fileexchanger.server.model.socket;
 
 
+import ru.fileexchanger.common.AsynchronousSocketChannelProxy;
 import ru.fileexchanger.common.SocketUtil;
 import ru.fileexchanger.server.MainHandler;
 import ru.fileexchanger.server.dao.CommonDao;
@@ -35,20 +36,21 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
 
     @Override
     public void completed(AsynchronousSocketChannel socketChannel, Void arg1) {
+        AsynchronousSocketChannelProxy proxyChanel = new AsynchronousSocketChannelProxy(socketChannel, SocketUtil.CHARSET_NAME);
         System.out.println(this);
-        System.out.println("client connected: " + socketChannel + " " + Thread.currentThread().getId());
+        System.out.println("client connected: " + proxyChanel.getSocketChannel() + " " + Thread.currentThread().getId());
         //mListener.accept(null, this); //не уверен, что это нужно
 
         try {
-            String login = SocketUtil.formatUtf16(SocketUtil.readMessage(socketChannel, SocketUtil.LOGIN_LENGTH));
-            String password = SocketUtil.formatUtf16(SocketUtil.readMessage(socketChannel, SocketUtil.LOGIN_LENGTH));
+            String login = SocketUtil.formatUtf16(SocketUtil.readMessage(proxyChanel, SocketUtil.LOGIN_LENGTH));
+            String password = SocketUtil.formatUtf16(SocketUtil.readMessage(proxyChanel, SocketUtil.LOGIN_LENGTH));
 
             Client client = tryCreateClient(login, password);
             if (client != null && mListener.isOpen()) {
                 System.out.println(client.getmLogin() + " " + client.getmPassword() + " " + client.getmToken());
-                mServer.addClient(socketChannel);
-                SocketUtil.sendMessage(socketChannel, SocketUtil.GOOD_CONNECTION_CODE);
-                new MainHandler(client, socketChannel).start();
+                mServer.addClient(proxyChanel.getSocketChannel());
+                SocketUtil.sendMessage(proxyChanel.getSocketChannel(), SocketUtil.GOOD_CONNECTION_CODE);
+                new MainHandler(client, proxyChanel).start();
 
                 //ByteBuffer inputBuffer = ByteBuffer.allocateDirect(Server.BUFFER_SIZE);
                 //ReadWriteCompletionHandler readWriteCompletionHandler = new ReadWriteCompletionHandler(socketChannel, inputBuffer, mServer, client);
@@ -56,11 +58,11 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
                 //socketChannel.read(inputBuffer, null, readWriteCompletionHandler);
 
             } else {
-                SocketUtil.sendMessage(socketChannel, "403");
+                SocketUtil.sendMessage(proxyChanel.getSocketChannel(), "403");
                 System.out.println("close connection");
 
-                if (socketChannel.isOpen()) {
-                    socketChannel.close();
+                if (proxyChanel.getSocketChannel().isOpen()) {
+                    proxyChanel.getSocketChannel().close();
                 }
 
                 System.gc();

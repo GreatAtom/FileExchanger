@@ -81,7 +81,7 @@ public class FileClient implements Login.LoginListener {
         removeRows(model);
         //initTable(model);
         files.forEach(f ->
-                model.addRow(f.toArray())
+                model.addRow(f.toArray(true))
         );
     }
 
@@ -93,7 +93,7 @@ public class FileClient implements Login.LoginListener {
     }
 
     private void initTable(DefaultTableModel model) {
-        String[] columnNames = {"File Name", "Size", "Download Size", "Status"};
+        String[] columnNames = {"id", "File Name", "Size", "Download Size", "Status"};
         for (int i = 0; i < columnNames.length; i++) {
             model.addColumn(columnNames[i]);
         }

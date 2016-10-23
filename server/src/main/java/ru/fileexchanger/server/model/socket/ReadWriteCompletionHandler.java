@@ -17,7 +17,22 @@ import static ru.fileexchanger.server.model.socket.Server.BUFFER_SIZE_FOR_FILE;
  * Created by Anton on 29.09.2016.
  * read client message
  */
+
+/**
+ * Наделал такой фигни, т.к. не компилилось
+ */
 class ReadWriteCompletionHandler implements CompletionHandler<Integer, Void> {
+
+    @Override
+    public void completed(Integer result, Void attachment) {
+
+    }
+
+    @Override
+    public void failed(Throwable exc, Void attachment) {
+
+    }
+    /**
 
     private AsynchronousSocketChannel mChannel;
     private Server mServer;
@@ -91,4 +106,6 @@ class ReadWriteCompletionHandler implements CompletionHandler<Integer, Void> {
     public void failed(Throwable exc, Void attachment) {
         System.out.println("Разрыв");
     }
+
+    */
 }

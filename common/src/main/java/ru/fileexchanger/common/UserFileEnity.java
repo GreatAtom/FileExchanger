@@ -51,7 +51,7 @@ public class UserFileEnity {
         this.downloadSize = downloadSize;
     }
 
-    public Object[] toArray(){
+    public Object[] toArray(boolean withId){
         String status = FileStatus.UNDEFINED.name();
         if(downloadSize==fileSize){
             status = FileStatus.DOWNLOADED.name();
@@ -59,7 +59,11 @@ public class UserFileEnity {
         if(downloadSize<fileSize){
             status = FileStatus.NOT_ALL.name();
         }
-        return new Object[]{fileName, String.valueOf(fileSize), String.valueOf(downloadSize), status};
+        if(withId){
+            return new Object[]{id, fileName, String.valueOf(fileSize), String.valueOf(downloadSize), status};
+        } else {
+            return new Object[]{fileName, String.valueOf(fileSize), String.valueOf(downloadSize), status};
+        }
     }
     public  enum FileStatus {
         UNDEFINED, DOWNLOADED, NOT_ALL

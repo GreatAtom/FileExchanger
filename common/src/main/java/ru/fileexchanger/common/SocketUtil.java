@@ -58,15 +58,33 @@ public class SocketUtil {
      * @throws InterruptedException
      * @throws TimeoutException
      */
-    public static String readMessage(AsynchronousSocketChannel socketChannel, final int size, int timeout) throws ExecutionException, InterruptedException, TimeoutException, UnsupportedEncodingException {
+    public static String readMessage(AsynchronousSocketChannelProxy channelProxy, final int size, int timeout) throws ExecutionException, InterruptedException, TimeoutException, UnsupportedEncodingException {
         System.out.println("Try to read message, length: "+size);
+        String message="";
         ByteBuffer byteBuffer = ByteBuffer.allocate(size);
         byteBuffer.clear();
-        int read = socketChannel.read(byteBuffer).get(timeout, TimeUnit.SECONDS);
-        String message = new String(byteBuffer.array(), 0, read, CHARSET_NAME);
-        System.out.println("Message has read: "+message);
+        while (message.length()<size){
+            /*int read = socketChannel.read(byteBuffer).get(timeout, TimeUnit.SECONDS);
+            if(read>0) {
+                message += new String(byteBuffer.array(), 0, read, CHARSET_NAME);
+            }*/
+            message +=channelProxy.readString(byteBuffer, timeout, TimeUnit.SECONDS, size-message.length());
+            byteBuffer.clear();
+        }
+        System.out.println("Message has read -- length: "+message.length()+" message: '"+message+"'");
         return message;
 
+    }
+
+    public static String readMessage(AsynchronousSocketChannelProxy socketChannel, int size) throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
+        return readMessage(socketChannel, size, DEFAULT_TIMEOUT);
+    }
+
+    public static void sendMessage(AsynchronousSocketChannel socketChannel, String message) throws UnsupportedEncodingException {
+        System.out.println("Try to send message: " + message);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length);
+        socketChannel.write(byteBuffer);
+        System.out.println("Message has send: " + message);
     }
 
     public static String readMessage(SocketChannel socketChannel, final int size) throws ExecutionException, InterruptedException, TimeoutException, IOException {
@@ -86,10 +104,22 @@ public class SocketUtil {
         return readMessage(socketChannel, COD_LENGTH);
     }
 
-    public static String readMessage(AsynchronousSocketChannel socketChannel, int size) throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
-        return readMessage(socketChannel, size, DEFAULT_TIMEOUT);
+    public static void sendMessage(SocketChannel socketChannel, String message) throws IOException {
+        System.out.println("Try to send message: " + message);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length);
+        String s = new String (message.getBytes(CHARSET_NAME), CHARSET_NAME);
+        System.out.println("Message: "+message+"; byte length: "+message.getBytes(CHARSET_NAME).length+"  :  " +s);
+        socketChannel.write(byteBuffer);
+        System.out.println("Message has send: " + message);
     }
 
+    /**
+     * Используется для передачи информации о таблице пользователя и пока работает корректно
+     * @param socketChannel
+     * @return
+     * @throws IOException
+     */
+    @Deprecated
     public static String readMessage(SocketChannel socketChannel) throws IOException {
         StringBuilder stringBuilder = new StringBuilder();
         ByteBuffer byteBuffer = ByteBuffer.allocate(2048);
@@ -105,22 +135,6 @@ public class SocketUtil {
         while (read>0);
 
         return stringBuilder.toString();
-    }
-
-    public static void sendMessage(AsynchronousSocketChannel socketChannel, String message) throws UnsupportedEncodingException {
-        System.out.println("Try to send message: " + message);
-        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length);
-        socketChannel.write(byteBuffer);
-        System.out.println("Message has send: " + message);
-    }
-
-    public static void sendMessage(SocketChannel socketChannel, String message) throws IOException {
-        System.out.println("Try to send message: " + message);
-        ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length);
-        String s = new String (message.getBytes(CHARSET_NAME), CHARSET_NAME);
-        System.out.println("Message: "+message+"; byte length: "+message.getBytes(CHARSET_NAME).length+"  :  " +s);
-        socketChannel.write(byteBuffer);
-        System.out.println("Message has send: " + message);
     }
 
     public static String formatUtf16(String s) {

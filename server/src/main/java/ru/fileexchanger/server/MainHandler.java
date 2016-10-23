@@ -1,6 +1,7 @@
 package ru.fileexchanger.server;
 
 import com.google.gson.Gson;
+import ru.fileexchanger.common.AsynchronousSocketChannelProxy;
 import ru.fileexchanger.common.SocketUtil;
 import ru.fileexchanger.common.UserFileEnity;
 import ru.fileexchanger.common.UserInfo;
@@ -26,11 +27,12 @@ import static ru.fileexchanger.server.model.socket.Server.BUFFER_SIZE_FOR_FILE;
  */
 public class MainHandler extends Thread {
     private Client client;
-    private AsynchronousSocketChannel socketChannel;
+    //private AsynchronousSocketChannel socketChannel;
+    private AsynchronousSocketChannelProxy socketChannel;
     private CommonDao commonDao;
     private boolean run;
 
-    public MainHandler(Client client, AsynchronousSocketChannel socketChannel) {
+    public MainHandler(Client client, AsynchronousSocketChannelProxy socketChannel) {
         System.out.println("MainHandler has created");
         this.client = client;
         this.socketChannel = socketChannel;
@@ -66,7 +68,7 @@ public class MainHandler extends Thread {
             System.out.println("Parsing...");
             Gson gson = new Gson();
             System.out.println("Try to send: " + gson.toJson(userInfo));
-            SocketUtil.sendMessage(socketChannel, gson.toJson(userInfo));
+            SocketUtil.sendMessage(socketChannel.getSocketChannel(), gson.toJson(userInfo));
             System.out.println("File info has send");
         } catch (Exception e) {
             e.printStackTrace();
@@ -99,9 +101,9 @@ public class MainHandler extends Thread {
                 FileChannel fileChannel = aFile.getChannel();
 
                 long readBytes = 0;
-                SocketUtil.sendMessage(socketChannel, SocketUtil.GOOD_SEND_FILE_CODE);
+                SocketUtil.sendMessage(socketChannel.getSocketChannel(), SocketUtil.GOOD_SEND_FILE_CODE);
                 do {
-                    long read = socketChannel.read(inputBuffer).get();
+                    long read = socketChannel.read(inputBuffer);
                     readBytes += (read > 0) ? read : 0;
                     System.out.println("read=" + read + "; readBytes=" + readBytes);
                     inputBuffer.flip();
@@ -112,10 +114,10 @@ public class MainHandler extends Thread {
             } catch (InterruptedException | ExecutionException | IOException e) {
 
             }
-            SocketUtil.sendMessage(socketChannel, SocketUtil.GOOD_CODE);
+            SocketUtil.sendMessage(socketChannel.getSocketChannel(), SocketUtil.GOOD_CODE);
         } catch (Exception e) {
             try {
-                SocketUtil.sendMessage(socketChannel, SocketUtil.DONT_SEND_FILE_CODE);
+                SocketUtil.sendMessage(socketChannel.getSocketChannel(), SocketUtil.DONT_SEND_FILE_CODE);
             } catch (UnsupportedEncodingException e1) {
                 e1.printStackTrace();
             }

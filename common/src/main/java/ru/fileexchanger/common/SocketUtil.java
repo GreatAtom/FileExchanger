@@ -18,6 +18,8 @@ public class SocketUtil {
 
     public static final String GOOD_CONNECTION_CODE = "200";
     public static final String GOOD_CODE = "201";
+    public static final String SHARE_FILES_CODE ="801";
+    public static final String MAKE_PRIVATE_FILES_CODE ="802";
     public static final String SEND_FILE_INFO_CODE = "900";
     public static final String SEND_FILE_CODE = "901";
     public static final String GOOD_SEND_FILE_CODE ="902";
@@ -30,6 +32,7 @@ public class SocketUtil {
     public static final int FILE_SIZE_LENGTH = 64;
 
     private static final int DEFAULT_TIMEOUT = 20;
+    private static final int LONG_VALUE_LENGTH = 19;
     private static final int COD_LENGTH = 3;
 
 
@@ -64,10 +67,6 @@ public class SocketUtil {
         ByteBuffer byteBuffer = ByteBuffer.allocate(size);
         byteBuffer.clear();
         while (message.length()<size){
-            /*int read = socketChannel.read(byteBuffer).get(timeout, TimeUnit.SECONDS);
-            if(read>0) {
-                message += new String(byteBuffer.array(), 0, read, CHARSET_NAME);
-            }*/
             message +=channelProxy.readString(byteBuffer, timeout, TimeUnit.SECONDS, size-message.length());
             byteBuffer.clear();
         }
@@ -139,5 +138,14 @@ public class SocketUtil {
 
     public static String formatUtf16(String s) {
         return s.trim().replace(new String(new char[]{'\uFEFF'}), "");
+    }
+
+    public static long readLong(AsynchronousSocketChannelProxy socketChannel) throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
+        String value = readMessage(socketChannel, LONG_VALUE_LENGTH).trim();
+        return Long.valueOf(value);
+    }
+
+    public static void sendLong(SocketChannel socketChannel, long value) throws IOException {
+        sendMessage(socketChannel, format(value, LONG_VALUE_LENGTH));
     }
 }

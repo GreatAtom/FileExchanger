@@ -3,6 +3,7 @@ package ru.fileexchanger.server;
 import com.google.gson.Gson;
 import ru.fileexchanger.common.AsynchronousSocketChannelProxy;
 import ru.fileexchanger.common.SocketUtil;
+import ru.fileexchanger.common.json.SharedForm;
 import ru.fileexchanger.common.json.UserFileEnity;
 import ru.fileexchanger.common.json.UserInfo;
 import ru.fileexchanger.server.dao.CommonDao;
@@ -17,6 +18,7 @@ import java.nio.channels.FileChannel;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import static ru.fileexchanger.server.model.socket.Server.BUFFER_SIZE_FOR_FILE;
 
@@ -48,11 +50,34 @@ public class MainHandler extends Thread {
                 switch (code) {
                     case SocketUtil.SEND_FILE_CODE: readFile(); break;
                     case SocketUtil.SEND_FILE_INFO_CODE: sendFilesInfo(); break;
+                    case SocketUtil.MAKE_PRIVATE_FILES_CODE: makePrivateFiles(); break;
+                    case SocketUtil.SHARE_FILES_CODE: shareFiles(); break;
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void shareFiles() throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
+        String json = readJson();
+        SharedForm sharedForm = new Gson().fromJson(json, SharedForm.class);
+        System.out.println("Good JSON");
+        commonDao.sharedFiles(sharedForm.getFilesIds(), sharedForm.getLogins());
+    }
+
+    private void makePrivateFiles() throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
+        String json = readJson();
+        SharedForm sharedForm = new Gson().fromJson(json, SharedForm.class);
+        System.out.println("Good JSON");
+        commonDao.makePrivate(sharedForm.getFilesIds());
+    }
+
+    private String readJson() throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
+        long length = SocketUtil.readLong(socketChannel);
+        String json =  SocketUtil.readMessage(socketChannel, (int)length);
+        SocketUtil.sendMessage(socketChannel.getSocketChannel(), SocketUtil.GOOD_CODE);
+        return json;
     }
 
     private void sendFilesInfo() {

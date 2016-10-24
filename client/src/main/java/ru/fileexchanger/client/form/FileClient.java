@@ -7,10 +7,13 @@ import ru.fileexchanger.common.json.UserFileEnity;
 import ru.fileexchanger.common.json.UserInfo;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,6 +35,8 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     private JLabel infoLabel;
     private JTable usersTable;
     private JTabbedPane tabbedPane1;
+    private JButton shareButton;
+    private JButton makePrivateButton;
     private JPanel cards;
     private CardLayout cardLayout;
 
@@ -40,6 +45,8 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
 
     private FileSenderService fileSenderSerive;
     private Property property;
+    private List<Integer> fileIdsForShared;
+    private List<String> userLoginsForShared;
 
     public FileClient(FileSenderService fileSenderService) {
         this.fileSenderSerive = fileSenderService;
@@ -72,6 +79,12 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
             } catch (IOException e1) {
                 System.out.println("Не удалось обновить таблицу");
             }
+        });
+        shareButton.addActionListener(e->{
+            fileSenderService.shareFiles(fileIdsForShared, userLoginsForShared);
+        });
+        makePrivateButton.addActionListener(e->{
+            fileSenderService.makePrivate(fileIdsForShared);
         });
 
         DefaultTableModel filesTableModel= (DefaultTableModel) filesTable.getModel();
@@ -107,6 +120,21 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         for (int i = 0; i < columnNames.length; i++) {
             model.addColumn(columnNames[i]);
         }
+        ListSelectionModel cellSelectionModel = filesTable.getSelectionModel();
+        cellSelectionModel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                int[] selectedRow = filesTable.getSelectedRows();
+
+                fileIdsForShared = new ArrayList<>();
+                for (int i = 0; i < selectedRow.length; i++) {
+                    Integer id = (Integer) filesTable.getValueAt(selectedRow[i], 0);
+                    fileIdsForShared.add(id);
+                }
+
+            }
+
+        });
     }
 
     private void initUsersTable(DefaultTableModel model) {
@@ -114,6 +142,19 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         for (int i = 0; i < columnNames.length; i++) {
             model.addColumn(columnNames[i]);
         }
+
+        ListSelectionModel cellSelectionModel = usersTable.getSelectionModel();
+        cellSelectionModel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                int[] selectedRow = usersTable.getSelectedRows();
+                userLoginsForShared = new ArrayList<>();
+                for (int i = 0; i < selectedRow.length; i++) {
+                    String id = (String) usersTable.getValueAt(selectedRow[i], 0);
+                    userLoginsForShared.add(id);
+                }
+            }
+        });
     }
 
     private void initMenuBar(JFrame frame) {

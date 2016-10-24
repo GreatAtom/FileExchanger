@@ -1,5 +1,6 @@
 package ru.fileexchanger.server.dao;
 
+import org.omg.CORBA.PUBLIC_MEMBER;
 import ru.fileexchanger.common.json.UserFileEnity;
 
 import java.sql.*;
@@ -18,6 +19,11 @@ public class CommonDao {
 
     public CommonDao() {
         createConnection();
+    }
+
+    public void makeQuery(String query) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(query);
+        preparedStatement.executeUpdate();
     }
 
     public boolean isValidUser(String login, String password){
@@ -122,5 +128,42 @@ public class CommonDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public void sharedFiles(List<Integer> filesIds, List<String> logins) {
+        filesIds.stream().forEach(fileId->{
+            logins.stream().forEach(login->{
+                try {
+                    sharedFile(fileId, login);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+        });
+    }
+
+    private void sharedFile(Integer fileId, String login) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement("insert into shared values(?, ?)");
+        preparedStatement.setString(1, login);
+        preparedStatement.setInt(2, fileId);
+        preparedStatement.executeUpdate();
+        System.out.println("File with id='"+fileId+"' has share for '"+login+"'");
+    }
+
+    public void makePrivate(List<Integer> filesIds) {
+        filesIds.stream().forEach(id -> {
+            try {
+                makePrivate(id);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void makePrivate(Integer id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement("delete from shared where fileId=?");
+        preparedStatement.setInt(1, id);
+        preparedStatement.executeUpdate();
+        System.out.println("File with id='"+id+"' is private");
     }
 }

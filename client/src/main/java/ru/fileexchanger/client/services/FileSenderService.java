@@ -1,7 +1,9 @@
 package ru.fileexchanger.client.services;
 
 import com.google.gson.Gson;
+import ru.fileexchanger.common.Common;
 import ru.fileexchanger.common.SocketUtil;
+import ru.fileexchanger.common.json.SharedForm;
 import ru.fileexchanger.common.json.UserFileEnity;
 import ru.fileexchanger.common.json.UserInfo;
 
@@ -150,6 +152,77 @@ public class FileSenderService {
         } else {
             System.out.println("Server is not ready to receive file");
         }
+    }
+
+    public void shareFiles(List<Integer> fileIdsForShared, List<String> userLoginsForShared) {
+        if(Common.isEmpty(fileIdsForShared) || Common.isEmpty(userLoginsForShared)) {
+            System.out.println("Not selected files ids or users");
+            return;
+        }
+        if(emptyChanel) {
+            emptyChanel = false;
+            try {
+                shareFilesProxy(fileIdsForShared, userLoginsForShared);
+                emptyChanel = true;
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (TimeoutException e) {
+                e.printStackTrace();
+            }
+            finally {
+                emptyChanel = true;
+            }
+        }
+    }
+
+    private void shareFilesProxy(List<Integer> fileIdsForShared, List<String> userLoginsForShared) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+        SharedForm sharedForm = new SharedForm();
+        sharedForm.setLogins(userLoginsForShared);
+        sharedForm.setFilesIds(fileIdsForShared);
+        String sharJson = new Gson().toJson(sharedForm);
+        SocketUtil.sendMessage(socketChannel, SocketUtil.SHARE_FILES_CODE);
+        SocketUtil.sendLong(socketChannel, sharJson.length());
+        SocketUtil.sendMessage(socketChannel, sharJson);
+        String code = SocketUtil.readCode(socketChannel);
+    }
+
+    public void makePrivate(List<Integer> fileIdsForShared) {
+        if(Common.isEmpty(fileIdsForShared)) {
+            System.out.println("Not selected files ids");
+            return;
+        }
+        if(emptyChanel) {
+            emptyChanel = false;
+            try {
+                makePrivateProxy(fileIdsForShared);
+                emptyChanel = true;
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (TimeoutException e) {
+                e.printStackTrace();
+            }
+            finally {
+                emptyChanel = true;
+            }
+        }
+    }
+
+    private void makePrivateProxy(List<Integer> fileIdsForShared) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+        SharedForm sharedForm = new SharedForm();
+        sharedForm.setFilesIds(fileIdsForShared);
+        String sharJson = new Gson().toJson(sharedForm);
+        SocketUtil.sendMessage(socketChannel, SocketUtil.MAKE_PRIVATE_FILES_CODE);
+        SocketUtil.sendLong(socketChannel, sharJson.length());
+        SocketUtil.sendMessage(socketChannel, sharJson);
+        String code =  SocketUtil.readCode(socketChannel);
     }
 
     public interface Informer {

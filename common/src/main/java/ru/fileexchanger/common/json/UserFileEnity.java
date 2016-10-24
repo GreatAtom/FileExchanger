@@ -1,4 +1,4 @@
-package ru.fileexchanger.common;
+package ru.fileexchanger.common.json;
 
 
 /**

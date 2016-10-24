@@ -51,7 +51,7 @@ public class SocketUtil {
     }
 
     /**
-     * @param socketChannel
+     * @param channelProxy
      * @param size
      * @return
      * @throws ExecutionException

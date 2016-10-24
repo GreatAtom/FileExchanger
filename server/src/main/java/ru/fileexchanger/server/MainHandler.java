@@ -3,8 +3,8 @@ package ru.fileexchanger.server;
 import com.google.gson.Gson;
 import ru.fileexchanger.common.AsynchronousSocketChannelProxy;
 import ru.fileexchanger.common.SocketUtil;
-import ru.fileexchanger.common.UserFileEnity;
-import ru.fileexchanger.common.UserInfo;
+import ru.fileexchanger.common.json.UserFileEnity;
+import ru.fileexchanger.common.json.UserInfo;
 import ru.fileexchanger.server.dao.CommonDao;
 import ru.fileexchanger.server.model.Client;
 
@@ -13,10 +13,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.FileChannel;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -61,9 +59,9 @@ public class MainHandler extends Thread {
         try {
             System.out.println("Try to send file info");
             System.out.println("loading file info from DB");
-            List<UserFileEnity> files = getUserFilesEnitry(client);
             UserInfo userInfo = new UserInfo();
-            userInfo.setFileEnityList(files);
+            userInfo.setFileEnityList(getUserFilesEnitry(client));
+            userInfo.setUsers(getUsersLogin(client.getmLogin()));
             System.out.println("Load: 100%");
             System.out.println("Parsing...");
             Gson gson = new Gson();
@@ -86,6 +84,10 @@ public class MainHandler extends Thread {
             }
         });
         return files;
+    }
+
+    private List<String> getUsersLogin(String login) throws SQLException {
+        return commonDao.loadUsers(login);
     }
 
     private void readFile() {

@@ -2,8 +2,8 @@ package ru.fileexchanger.client.services;
 
 import com.google.gson.Gson;
 import ru.fileexchanger.common.SocketUtil;
-import ru.fileexchanger.common.UserFileEnity;
-import ru.fileexchanger.common.UserInfo;
+import ru.fileexchanger.common.json.UserFileEnity;
+import ru.fileexchanger.common.json.UserInfo;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -21,7 +21,7 @@ public class FileSenderService {
 
     private static final int FILE_BUFFER_SIZE = 65536;
     private SocketChannel socketChannel;
-    private List<UserFileEnity> userFileEnities;
+    private UserInfo userInfo;
     private volatile boolean emptyChanel = true;
     private Property property;
     private Informer informer;
@@ -74,15 +74,14 @@ public class FileSenderService {
      * @return
      * @throws IOException
      */
-    public List<UserFileEnity> getUpdatedUserFiles() throws IOException {
-        if(!emptyChanel){ return userFileEnities;}
+    public UserInfo getUpdatedUserInfo() throws IOException {
+        if(!emptyChanel){ return userInfo;}
         System.out.println("Try to read File Info");
         SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_INFO_CODE);
         String userInfoString = SocketUtil.readMessage(socketChannel);
         System.out.println("File info has read:\n"+ userInfoString);
-        UserInfo userInfo =  new Gson().fromJson(userInfoString, UserInfo.class);
-        userFileEnities = userInfo.getFileEnityList();
-        return userFileEnities;
+        userInfo =  new Gson().fromJson(userInfoString, UserInfo.class);
+        return userInfo;
     }
 
 

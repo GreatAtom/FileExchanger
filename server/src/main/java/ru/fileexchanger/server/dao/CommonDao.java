@@ -1,6 +1,6 @@
 package ru.fileexchanger.server.dao;
 
-import ru.fileexchanger.common.UserFileEnity;
+import ru.fileexchanger.common.json.UserFileEnity;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -60,6 +60,29 @@ public class CommonDao {
         preparedStatement.setLong(4, fileSize);
         preparedStatement.executeUpdate();
         return id;
+    }
+
+    /**
+     * Возвращает список логинов всех пользователей, кроме пользовтеля с логином login
+     * @param login
+     * @return
+     */
+    public List<String> loadUsers(String login) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement("select login from users where login !=?");
+        preparedStatement.setString(1, login);
+        ResultSet resultSet =  preparedStatement.executeQuery();
+        List<String> usersLogin= new ArrayList<>();
+        while (resultSet.next()) {
+            usersLogin.add(resultSet.getString(1));
+        }
+        return usersLogin;
+    }
+
+    public void insertUser(String login, String password) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement("insert into users values(?, ?)");
+        preparedStatement.setString(1, login);
+        preparedStatement.setString(2, password);
+        preparedStatement.executeUpdate();
     }
 
     private long loadMaxFileId() throws SQLException {

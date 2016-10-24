@@ -3,13 +3,15 @@ package ru.fileexchanger.client.form;
 import ru.fileexchanger.client.services.Context;
 import ru.fileexchanger.client.services.FileSenderService;
 import ru.fileexchanger.client.services.Property;
-import ru.fileexchanger.common.UserFileEnity;
+import ru.fileexchanger.common.json.UserFileEnity;
+import ru.fileexchanger.common.json.UserInfo;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by Dmitry on 12.10.2016.
@@ -28,6 +30,8 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     private JButton updateButton;
     private JPanel bottomPanel;
     private JLabel infoLabel;
+    private JTable usersTable;
+    private JTabbedPane tabbedPane1;
     private JPanel cards;
     private CardLayout cardLayout;
 
@@ -64,24 +68,31 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         });
         updateButton.addActionListener(e-> {
             try {
-                updateTable();
+                updateFileAndUsersTables();
             } catch (IOException e1) {
                 System.out.println("Не удалось обновить таблицу");
             }
         });
 
-        DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
-        initTable(model);
+        DefaultTableModel filesTableModel= (DefaultTableModel) filesTable.getModel();
+        initFilesTable(filesTableModel);
+        DefaultTableModel usersTableModel = (DefaultTableModel) usersTable.getModel();
+        initUsersTable(usersTableModel);
     }
 
-    private void updateTable() throws IOException {
-        java.util.List<UserFileEnity> files = fileSenderSerive.getUpdatedUserFiles();
-
+    private void updateFileAndUsersTables() throws IOException {
+        UserInfo userInfo = fileSenderSerive.getUpdatedUserInfo();
+        java.util.List<UserFileEnity> files = userInfo.getFileEnityList();
         DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
         removeRows(model);
         files.forEach(f ->
                 model.addRow(f.toArray(true))
         );
+
+        List<String> users = userInfo.getUsers();
+        DefaultTableModel usersTableModel= (DefaultTableModel) usersTable.getModel();
+        removeRows(usersTableModel);
+        users.stream().forEach(f->usersTableModel.addRow(new Object[]{f}));
     }
 
     private void removeRows(DefaultTableModel model) {
@@ -91,8 +102,15 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         }
     }
 
-    private void initTable(DefaultTableModel model) {
+    private void initFilesTable(DefaultTableModel model) {
         String[] columnNames = {"id", "File Name", "Size", "Download Size", "Status"};
+        for (int i = 0; i < columnNames.length; i++) {
+            model.addColumn(columnNames[i]);
+        }
+    }
+
+    private void initUsersTable(DefaultTableModel model) {
+        String[] columnNames = {"login"};
         for (int i = 0; i < columnNames.length; i++) {
             model.addColumn(columnNames[i]);
         }
@@ -128,7 +146,7 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         this.password = password;
         cardLayout.show(cards, "MAIN");
         try {
-            updateTable();
+            updateFileAndUsersTables();
         } catch (IOException e) {
             System.out.println("Не удалось обновить таблицу");
         }
@@ -146,7 +164,7 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     public void writeMessage(String message) {
         infoLabel.setText(message);
         try {
-            updateTable();
+            updateFileAndUsersTables();
         } catch (IOException e) {
             e.printStackTrace();
             infoLabel.setText("Не удалось обновить таблицу");
@@ -156,7 +174,7 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     @Override
     public void fileHasSend() {
         try {
-            updateTable();
+            updateFileAndUsersTables();
         } catch (IOException e) {
             e.printStackTrace();
         }

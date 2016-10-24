@@ -87,16 +87,31 @@ public class MainHandler extends Thread {
             UserInfo userInfo = new UserInfo();
             userInfo.setFileEnityList(getUserFilesEnitry(client));
             userInfo.setUsers(getUsersLogin(client.getmLogin()));
+            userInfo.setSharedFileEnityList(getSharedFilesByLogin(client.getmLogin()));
             System.out.println("Load: 100%");
             System.out.println("Parsing...");
             Gson gson = new Gson();
             System.out.println("Try to send: " + gson.toJson(userInfo));
-            SocketUtil.sendMessage(socketChannel.getSocketChannel(), gson.toJson(userInfo));
+            String json = gson.toJson(userInfo);
+            SocketUtil.sendLong(socketChannel.getSocketChannel(), json.length());
+            SocketUtil.sendMessage(socketChannel.getSocketChannel(), json);
             System.out.println("File info has send");
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Не удалось отрпавить информацию о файлах");
         }
+    }
+
+    private List<UserFileEnity> getSharedFilesByLogin(String login) throws SQLException {
+        List<UserFileEnity> files = commonDao.loadSharedFilesForUsers(login);
+        files.stream().forEach(f->{
+            String filePath = client.getFilePathById(f.getId());
+            File file = new File(filePath);
+            if(file.isFile()){
+                f.setDownloadSize(file.length());
+            }
+        });
+        return files;
     }
 
     private List<UserFileEnity> getUserFilesEnitry(Client client) throws SQLException {

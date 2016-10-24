@@ -7,7 +7,7 @@ import java.sql.SQLException;
  */
 public class DBOperation {
     public static void main(String[] args) throws SQLException {
-        //clearFileInfo();
+        clearFileInfo();
         //new CommonDao().insertUser("anton", "anton");
         //new CommonDao().insertUser("vasiliy", "vasiliy");
         //new CommonDao().makeQuery("create table shared (userLogin VARCHAR(32), fileId INT)");

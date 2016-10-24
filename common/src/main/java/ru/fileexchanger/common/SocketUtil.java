@@ -34,6 +34,7 @@ public class SocketUtil {
     private static final int DEFAULT_TIMEOUT = 20;
     private static final int LONG_VALUE_LENGTH = 19;
     private static final int COD_LENGTH = 3;
+    public static final int BUFFER_SIZE_FOR_FILE = 65536;
 
 
     public static String format(String message, int length) {
@@ -145,7 +146,15 @@ public class SocketUtil {
         return Long.valueOf(value);
     }
 
+    public static long readLong(SocketChannel socketChannel) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        String value = readMessage(socketChannel, LONG_VALUE_LENGTH).trim();
+        return Long.valueOf(value);
+    }
+
     public static void sendLong(SocketChannel socketChannel, long value) throws IOException {
+        sendMessage(socketChannel, format(value, LONG_VALUE_LENGTH));
+    }
+    public static void sendLong(AsynchronousSocketChannel socketChannel, long value) throws IOException {
         sendMessage(socketChannel, format(value, LONG_VALUE_LENGTH));
     }
 }

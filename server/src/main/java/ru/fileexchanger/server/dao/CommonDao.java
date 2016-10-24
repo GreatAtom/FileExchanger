@@ -42,10 +42,21 @@ public class CommonDao {
     }
 
     public List<UserFileEnity> loadUserFile(String userLogin) throws SQLException {
-        List<UserFileEnity> files = new ArrayList<UserFileEnity>();
         PreparedStatement preparedStatement = connection.prepareStatement("select fileId, userLogin, fileName, fileSize from USERFILES where userLogin=?");
         preparedStatement.setString(1, userLogin);
         ResultSet resultSet = preparedStatement.executeQuery();
+        return fillUserFileEnitys(resultSet);
+    }
+
+    public List<UserFileEnity> loadSharedFilesForUsers(String userLogin) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement("select fileId, userLogin, fileName, fileSize from USERFILES where fileId in (select fileId from shared where userLogin = ?)");
+        preparedStatement.setString(1, userLogin);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        return fillUserFileEnitys(resultSet);
+    }
+
+    private List<UserFileEnity> fillUserFileEnitys(ResultSet resultSet) throws SQLException {
+        List<UserFileEnity> files = new ArrayList<UserFileEnity>();
         while (resultSet.next()){
             UserFileEnity fileEnity = new UserFileEnity();
             fileEnity.setId(resultSet.getInt("fileId"));
@@ -125,6 +136,7 @@ public class CommonDao {
     public void clearFileInfo() {
         try {
             connection.createStatement().execute("delete from USERFILES");
+            connection.createStatement().execute("delete from shared");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -149,6 +161,7 @@ public class CommonDao {
         preparedStatement.executeUpdate();
         System.out.println("File with id='"+fileId+"' has share for '"+login+"'");
     }
+
 
     public void makePrivate(List<Integer> filesIds) {
         filesIds.stream().forEach(id -> {

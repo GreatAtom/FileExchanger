@@ -29,7 +29,8 @@ public class Dir {
     }
 
     public String getPath() {
-        String directoryPath = Server.DEFAULT_FILES_PATH + "/" + getmToken() + "/";
+        //String directoryPath = Server.DEFAULT_FILES_PATH + "/" + getmToken() + "/";
+        String directoryPath = Server.DEFAULT_FILES_PATH;//все файлы будут в одном месте, иначе придётся усложнять логику генерирования таблицы для общих файлов
         File theDir = new File(directoryPath);
         if (!theDir.exists()) theDir.mkdir();
         return directoryPath;

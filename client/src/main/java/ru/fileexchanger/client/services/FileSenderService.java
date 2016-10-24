@@ -41,6 +41,7 @@ public class FileSenderService {
                 } catch (IOException e) {
                     e.printStackTrace();
                     writeInfo("Ошибка. Передача файлов прервана");
+                    informer.errorOfSendingFile();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     writeInfo("Ошибка. Передача файлов прервана");
@@ -76,11 +77,13 @@ public class FileSenderService {
      * @return
      * @throws IOException
      */
-    public UserInfo getUpdatedUserInfo() throws IOException {
+    public UserInfo getUpdatedUserInfo() throws IOException, InterruptedException, ExecutionException, TimeoutException {
         if(!emptyChanel){ return userInfo;}
         System.out.println("Try to read File Info");
         SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_INFO_CODE);
-        String userInfoString = SocketUtil.readMessage(socketChannel);
+        //String userInfoString = SocketUtil.readMessage(socketChannel);
+        long size = SocketUtil.readLong(socketChannel);
+        String userInfoString = SocketUtil.readMessage(socketChannel, (int)size);
         System.out.println("File info has read:\n"+ userInfoString);
         userInfo =  new Gson().fromJson(userInfoString, UserInfo.class);
         return userInfo;
@@ -228,6 +231,7 @@ public class FileSenderService {
     public interface Informer {
         void writeMessage(String message);
         void fileHasSend();
+        void errorOfSendingFile();
     }
 
     public void setInformer(Informer informer) {

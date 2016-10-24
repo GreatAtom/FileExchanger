@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by Dmitry on 12.10.2016.
@@ -37,6 +39,7 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     private JTabbedPane tabbedPane1;
     private JButton shareButton;
     private JButton makePrivateButton;
+    private JTable sharedFileTable;
     private JPanel cards;
     private CardLayout cardLayout;
 
@@ -75,8 +78,8 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         });
         updateButton.addActionListener(e-> {
             try {
-                updateFileAndUsersTables();
-            } catch (IOException e1) {
+                updateUserInfo();
+            } catch (Exception e1) {
                 System.out.println("Не удалось обновить таблицу");
             }
         });
@@ -91,9 +94,11 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         initFilesTable(filesTableModel);
         DefaultTableModel usersTableModel = (DefaultTableModel) usersTable.getModel();
         initUsersTable(usersTableModel);
+        DefaultTableModel sharedFilesTableModel= (DefaultTableModel) sharedFileTable.getModel();
+        initSharedFilesTable(sharedFilesTableModel);
     }
 
-    private void updateFileAndUsersTables() throws IOException {
+    private void updateUserInfo() throws IOException, InterruptedException, ExecutionException, TimeoutException {
         UserInfo userInfo = fileSenderSerive.getUpdatedUserInfo();
         java.util.List<UserFileEnity> files = userInfo.getFileEnityList();
         DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
@@ -106,6 +111,11 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         DefaultTableModel usersTableModel= (DefaultTableModel) usersTable.getModel();
         removeRows(usersTableModel);
         users.stream().forEach(f->usersTableModel.addRow(new Object[]{f}));
+
+        List<UserFileEnity> sharedFile = userInfo.getSharedFileEnityList();
+        DefaultTableModel sharedFilesTableModel= (DefaultTableModel) sharedFileTable.getModel();
+        removeRows(sharedFilesTableModel);
+        sharedFile.stream().forEach(f->sharedFilesTableModel.addRow(f.toArray(true)));
     }
 
     private void removeRows(DefaultTableModel model) {
@@ -114,6 +124,29 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
             model.removeRow(i);
         }
     }
+
+    private void initSharedFilesTable(DefaultTableModel model) {
+        String[] columnNames = {"id", "File Name", "Size", "Download Size", "Status"};
+        for (int i = 0; i < columnNames.length; i++) {
+            model.addColumn(columnNames[i]);
+        }
+        ListSelectionModel cellSelectionModel = filesTable.getSelectionModel();
+        cellSelectionModel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                int[] selectedRow = filesTable.getSelectedRows();
+
+                fileIdsForShared = new ArrayList<>();
+                for (int i = 0; i < selectedRow.length; i++) {
+                    Integer id = (Integer) filesTable.getValueAt(selectedRow[i], 0);
+                    System.out.println(id);
+                }
+
+            }
+
+        });
+    }
+
 
     private void initFilesTable(DefaultTableModel model) {
         String[] columnNames = {"id", "File Name", "Size", "Download Size", "Status"};
@@ -187,8 +220,8 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         this.password = password;
         cardLayout.show(cards, "MAIN");
         try {
-            updateFileAndUsersTables();
-        } catch (IOException e) {
+            updateUserInfo();
+        } catch (Exception e) {
             System.out.println("Не удалось обновить таблицу");
         }
     }
@@ -205,8 +238,8 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     public void writeMessage(String message) {
         infoLabel.setText(message);
         try {
-            updateFileAndUsersTables();
-        } catch (IOException e) {
+            updateUserInfo();
+        } catch (Exception e) {
             e.printStackTrace();
             infoLabel.setText("Не удалось обновить таблицу");
         }
@@ -215,9 +248,13 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     @Override
     public void fileHasSend() {
         try {
-            updateFileAndUsersTables();
-        } catch (IOException e) {
+            updateUserInfo();
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void errorOfSendingFile() {
     }
 }

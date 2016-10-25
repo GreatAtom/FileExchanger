@@ -33,7 +33,7 @@ public class MainHandler extends Thread {
     private boolean run;
 
     public MainHandler(Client client, AsynchronousSocketChannelProxy socketChannel) {
-        System.out.println("MainHandler has created");
+        ServerMain.log("MainHandler has created");
         this.client = client;
         this.socketChannel = socketChannel;
         this.run = true;
@@ -44,9 +44,9 @@ public class MainHandler extends Thread {
     public void run() {
         try {
             while (run) {
-                System.out.println("Wating code");
+                ServerMain.log("Wating code");
                 String code = SocketUtil.readMessage(socketChannel, 3, 60 * 15);
-                System.out.println("cod: " + code);
+                ServerMain.log("cod: " + code);
                 switch (code) {
                     case SocketUtil.SEND_FILE_CODE: readFile(); break;
                     case SocketUtil.SEND_FILE_INFO_CODE: sendFilesInfo(); break;
@@ -62,14 +62,14 @@ public class MainHandler extends Thread {
     private void shareFiles() throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
         String json = readJson();
         SharedForm sharedForm = new Gson().fromJson(json, SharedForm.class);
-        System.out.println("Good JSON");
+        ServerMain.log("Good JSON");
         commonDao.sharedFiles(sharedForm.getFilesIds(), sharedForm.getLogins());
     }
 
     private void makePrivateFiles() throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
         String json = readJson();
         SharedForm sharedForm = new Gson().fromJson(json, SharedForm.class);
-        System.out.println("Good JSON");
+        ServerMain.log("Good JSON");
         commonDao.makePrivate(sharedForm.getFilesIds());
     }
 
@@ -82,23 +82,23 @@ public class MainHandler extends Thread {
 
     private void sendFilesInfo() {
         try {
-            System.out.println("Try to send file info");
-            System.out.println("loading file info from DB");
+            ServerMain.log("Try to send file info");
+            ServerMain.log("loading file info from DB");
             UserInfo userInfo = new UserInfo();
             userInfo.setFileEnityList(getUserFilesEnitry(client));
             userInfo.setUsers(getUsersLogin(client.getmLogin()));
             userInfo.setSharedFileEnityList(getSharedFilesByLogin(client.getmLogin()));
-            System.out.println("Load: 100%");
-            System.out.println("Parsing...");
+            ServerMain.log("Load: 100%");
+            ServerMain.log("Parsing...");
             Gson gson = new Gson();
-            System.out.println("Try to send: " + gson.toJson(userInfo));
+            ServerMain.log("Try to send: " + gson.toJson(userInfo));
             String json = gson.toJson(userInfo);
             SocketUtil.sendLong(socketChannel.getSocketChannel(), json.length());
             SocketUtil.sendMessage(socketChannel.getSocketChannel(), json);
-            System.out.println("File info has send");
+            ServerMain.log("File info has send");
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Не удалось отрпавить информацию о файлах");
+            ServerMain.log("Не удалось отрпавить информацию о файлах");
         }
     }
 
@@ -131,12 +131,12 @@ public class MainHandler extends Thread {
     }
 
     private void readFile() {
-        System.out.println("receive file");
+        ServerMain.log("receive file");
         try {
             String fileName = SocketUtil.readMessage(socketChannel, SocketUtil.FILE_NAME_LENGTH).trim();
             long fileSize = Long.valueOf(SocketUtil.readMessage(socketChannel, SocketUtil.FILE_SIZE_LENGTH).trim());
             long id = commonDao.insertFile(client.getmLogin(), fileName, fileSize);
-            System.out.println(fileName + " " + fileSize+" id: "+id);
+            ServerMain.log(fileName + " " + fileSize+" id: "+id);
 
             try (RandomAccessFile aFile = new RandomAccessFile(client.getFilePathById(id), "rw")) {
                 ByteBuffer inputBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE_FOR_FILE);
@@ -147,12 +147,12 @@ public class MainHandler extends Thread {
                 do {
                     long read = socketChannel.read(inputBuffer);
                     readBytes += (read > 0) ? read : 0;
-                    System.out.println("read=" + read + "; readBytes=" + readBytes);
+                    ServerMain.log("read=" + read + "; readBytes=" + readBytes);
                     inputBuffer.flip();
                     fileChannel.write(inputBuffer);
                     inputBuffer.clear();
                 } while ((readBytes < fileSize));
-                System.out.println("File has received");
+                ServerMain.log("File has received");
             } catch (InterruptedException | ExecutionException | IOException e) {
 
             }

@@ -8,7 +8,7 @@
 
 <GridPane alignment="center" hgap="10" prefHeight="0.0" prefWidth="313.0" vgap="10" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.fileexchanger.server.controls.Controller">
     <GridPane GridPane.columnIndex="0" GridPane.rowIndex="1" xmlns="http://javafx.com/javafx/8.0.76-ea" xmlns:fx="http://javafx.com/fxml/1">
-        <ListView fx:id="clientListView" prefHeight="262.0" prefWidth="240.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+        <ListView fx:id="logView" prefHeight="262.0" prefWidth="240.0" GridPane.columnIndex="1" GridPane.rowIndex="0" />
       <columnConstraints>
          <ColumnConstraints />
          <ColumnConstraints />

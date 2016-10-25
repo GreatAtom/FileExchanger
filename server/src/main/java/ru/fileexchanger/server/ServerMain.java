@@ -21,13 +21,8 @@ public class ServerMain extends Application {
         ServerMain.controller = controller;
     }
 
-    public static void updateListView(List<String> list) {
-        Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-                controller.updateListView(list);
-            }
-        });
+    public static void updateListView(String str) {
+        Platform.runLater(() -> controller.updateListView(str));
     }
 
     @Override
@@ -39,7 +34,7 @@ public class ServerMain extends Application {
     }
 
     public static void startServer() {
-        System.out.println("Server start...");
+        log("Server start...");
 
         BlockingQueue<Runnable> queue = new SynchronousQueue<>();
         ExecutorService executorService = new ThreadPoolExecutor(2, 2,
@@ -48,6 +43,11 @@ public class ServerMain extends Application {
 
         server = new Server(8989);
         server.start();
+    }
+
+    public synchronized static void log(String log) {
+        ServerMain.updateListView(log);
+        System.out.println(log);
     }
 
     public static void stopServer() {

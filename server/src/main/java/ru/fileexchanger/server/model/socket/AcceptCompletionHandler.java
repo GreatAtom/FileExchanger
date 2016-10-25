@@ -4,6 +4,7 @@ package ru.fileexchanger.server.model.socket;
 import ru.fileexchanger.common.AsynchronousSocketChannelProxy;
 import ru.fileexchanger.common.SocketUtil;
 import ru.fileexchanger.server.MainHandler;
+import ru.fileexchanger.server.ServerMain;
 import ru.fileexchanger.server.dao.CommonDao;
 import ru.fileexchanger.server.model.Client;
 
@@ -37,8 +38,8 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
     @Override
     public void completed(AsynchronousSocketChannel socketChannel, Void arg1) {
         AsynchronousSocketChannelProxy proxyChanel = new AsynchronousSocketChannelProxy(socketChannel, SocketUtil.CHARSET_NAME);
-        System.out.println(this);
-        System.out.println("client connected: " + proxyChanel.getSocketChannel() + " " + Thread.currentThread().getId());
+        ServerMain.log(this.toString());
+        ServerMain.log("client connected: " + proxyChanel.getSocketChannel() + " " + Thread.currentThread().getId());
         mListener.accept(null, this); //не уверен, что это нужно
 
         try {
@@ -47,7 +48,7 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
 
             Client client = tryCreateClient(login, password);
             if (client != null && mListener.isOpen()) {
-                System.out.println(client.getmLogin() + " " + client.getmPassword() + " " + client.getmToken());
+                ServerMain.log(client.getmLogin() + " " + client.getmPassword() + " " + client.getmToken());
                 mServer.addClient(proxyChanel.getSocketChannel());
                 SocketUtil.sendMessage(proxyChanel.getSocketChannel(), SocketUtil.GOOD_CONNECTION_CODE);
                 new MainHandler(client, proxyChanel).start();
@@ -59,7 +60,7 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
 
             } else {
                 SocketUtil.sendMessage(proxyChanel.getSocketChannel(), "403");
-                System.out.println("close connection");
+                ServerMain.log("close connection");
 
                 if (proxyChanel.getSocketChannel().isOpen()) {
                     proxyChanel.getSocketChannel().close();
@@ -71,7 +72,7 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
         } catch (InterruptedException | ExecutionException | IOException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {
-            System.out.println("close connection");
+            ServerMain.log("close connection");
         }
     }
 

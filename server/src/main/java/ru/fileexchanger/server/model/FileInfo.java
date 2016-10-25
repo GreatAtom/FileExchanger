@@ -1,5 +1,7 @@
 package ru.fileexchanger.server.model;
 
+import ru.fileexchanger.server.ServerMain;
+
 /**
  * Created by Dmitry on 02.10.2016.
  */
@@ -26,7 +28,7 @@ public class FileInfo {
             long size = Long.parseLong(sSize);
             return new FileInfo(name, size);
         } catch (NumberFormatException nfe) {
-            System.out.println("NumberFormatException: " + nfe.getMessage());
+            ServerMain.log("NumberFormatException: " + nfe.getMessage());
         }
         return null;
     }

@@ -49,14 +49,14 @@ class ReadWriteCompletionHandler implements CompletionHandler<Integer, Void> {
 
     @Override
     public void completed(Integer bytesRead, Void attachment) {
-        System.out.println("СРАБОТАЛА ЭТА ХЕРНЯ");
+        ServerMain.log("СРАБОТАЛА ЭТА ХЕРНЯ");
         if (mClient.getDir().isDirUpdates()) {
             mChannel.write(ByteBuffer.wrap(((String) "README.MD").getBytes()));
             mClient.getDir().setDirUpdates(false);
         }
 
         if (bytesRead < 1 || !mChannel.isOpen()) {
-            System.out.println("Closing connection to " + mChannel);
+            ServerMain.log("Closing connection to " + mChannel);
             mServer.removeClient(mChannel);
         } else {
 
@@ -68,12 +68,12 @@ class ReadWriteCompletionHandler implements CompletionHandler<Integer, Void> {
             mInputBuffer.clear();
 
             if (message.equals(SocketUtil.SEND_FILE_CODE)) {
-                System.out.println("receive file");
+                ServerMain.log("receive file");
 
                 try {
                     String fileName = SocketUtil.readMessage(mChannel, SocketUtil.FILE_NAME_LENGTH);
                     String fileSize = SocketUtil.readMessage(mChannel, SocketUtil.FILE_SIZE_LENGTH);
-                    System.out.println(fileName + " " + fileSize);
+                    ServerMain.log(fileName + " " + fileSize);
                     FileInfo fileInfo = FileInfo.tryBildFileInfo(fileName, fileSize);
 
                     if (fileInfo == null) {
@@ -87,16 +87,16 @@ class ReadWriteCompletionHandler implements CompletionHandler<Integer, Void> {
 
                 } catch (ExecutionException | InterruptedException e) {
                     e.printStackTrace();
-                    System.out.println("Closing connection to " + mChannel);
+                    ServerMain.log("Closing connection to " + mChannel);
                     mServer.removeClient(mChannel);
                 } catch (TimeoutException e) {
-                    System.out.println("close connection");
+                    ServerMain.log("close connection");
                     mServer.removeClient(mChannel);
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
             } else {
-                System.out.println("Received message from " + ":" + message);
+                ServerMain.log("Received message from " + ":" + message);
                 mChannel.read(mInputBuffer, null, this);
             }
         }
@@ -104,7 +104,7 @@ class ReadWriteCompletionHandler implements CompletionHandler<Integer, Void> {
 
     @Override
     public void failed(Throwable exc, Void attachment) {
-        System.out.println("Разрыв");
+        ServerMain.log("Разрыв");
     }
 
     */

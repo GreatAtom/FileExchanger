@@ -1,6 +1,7 @@
 package ru.fileexchanger.server.model.socket;
 
 import ru.fileexchanger.common.SocketUtil;
+import ru.fileexchanger.server.ServerMain;
 import ru.fileexchanger.server.model.Client;
 import ru.fileexchanger.server.model.FileInfo;
 
@@ -36,7 +37,7 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
     @Override
     public void completed(Integer bytesRead, Void attachment) {
         if (bytesRead < 1 || !mChannel.isOpen()) {
-            System.out.println("Closing connection to " + mChannel);
+            ServerMain.log("Closing connection to " + mChannel);
             mServer.removeClient(mChannel);
         } else {
             try {
@@ -45,7 +46,7 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
                 e.printStackTrace();
             }
             mClient.getDir().setDirUpdates(true);
-            System.out.println("End of file reached...");
+            ServerMain.log("End of file reached...");
 
             ByteBuffer inputBuffer = ByteBuffer.allocateDirect(Server.BUFFER_SIZE);
             /*ReadWriteCompletionHandler readWriteCompletionHandler =
@@ -83,7 +84,7 @@ public class ReadWriteFileCompletionHandler implements CompletionHandler<Integer
 
         } catch (InterruptedException | ExecutionException | IOException e) {
             e.printStackTrace();
-            System.out.println("Closing connection to " + mChannel);
+            ServerMain.log("Closing connection to " + mChannel);
             mServer.removeClient(mChannel);
             try {
                 mChannel.close();

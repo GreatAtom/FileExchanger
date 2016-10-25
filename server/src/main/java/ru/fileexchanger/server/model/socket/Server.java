@@ -40,12 +40,7 @@ public class Server extends Thread {
 
     public void removeClient(AsynchronousSocketChannel client) {
         mConnections.remove(client);
-       /* List<String> temp = mConnections.stream()
-                .filter(e -> e != null)
-                .map(AsynchronousSocketChannel::toString)
-                .collect(Collectors.toList());
-        ServerMain.updateListView(temp);*/
-    }
+     }
 
     @Override
     public void run() {
@@ -72,11 +67,9 @@ public class Server extends Thread {
                 mListener.close();
             }
 
-            ServerMain.updateListView(new ArrayList<String>(0));
+            ServerMain.log("Server has stopped");
 
             System.gc();
-
-            System.out.println("Server has stopped");
             return true;
         } catch (IOException e) {
             e.printStackTrace();

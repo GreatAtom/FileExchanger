@@ -83,7 +83,7 @@ public class SocketUtil {
     public static void sendMessage(AsynchronousSocketChannel socketChannel, String message) throws UnsupportedEncodingException {
         System.out.println("Try to send message: " + message);
         ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length);
-        socketChannel.write(byteBuffer);
+        socketChannel.write(byteBuffer); // TODO tryWrite
         System.out.println("Message has send: " + message);
     }
 

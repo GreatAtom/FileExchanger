@@ -39,7 +39,7 @@ public class AcceptCompletionHandler implements CompletionHandler<AsynchronousSo
         AsynchronousSocketChannelProxy proxyChanel = new AsynchronousSocketChannelProxy(socketChannel, SocketUtil.CHARSET_NAME);
         System.out.println(this);
         System.out.println("client connected: " + proxyChanel.getSocketChannel() + " " + Thread.currentThread().getId());
-        //mListener.accept(null, this); //не уверен, что это нужно
+        mListener.accept(null, this); //не уверен, что это нужно
 
         try {
             String login = SocketUtil.formatUtf16(SocketUtil.readMessage(proxyChanel, SocketUtil.LOGIN_LENGTH));

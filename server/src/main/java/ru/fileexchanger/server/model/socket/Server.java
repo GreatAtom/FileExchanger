@@ -34,22 +34,17 @@ public class Server extends Thread {
         mPORT = port;
     }
 
-    public synchronized void addClient(AsynchronousSocketChannel client) {
+    public void addClient(AsynchronousSocketChannel client) {
         mConnections.add(client);
-        List<String> temp = mConnections.stream()
-                .filter(e -> e != null)
-                .map(AsynchronousSocketChannel::toString)
-                .collect(Collectors.toList());
-        ServerMain.updateListView(temp);
     }
 
-    public synchronized void removeClient(AsynchronousSocketChannel client) {
+    public void removeClient(AsynchronousSocketChannel client) {
         mConnections.remove(client);
-        List<String> temp = mConnections.stream()
+       /* List<String> temp = mConnections.stream()
                 .filter(e -> e != null)
                 .map(AsynchronousSocketChannel::toString)
                 .collect(Collectors.toList());
-        ServerMain.updateListView(temp);
+        ServerMain.updateListView(temp);*/
     }
 
     @Override

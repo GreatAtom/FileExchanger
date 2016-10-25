@@ -18,12 +18,13 @@ public class SocketUtil {
 
     public static final String GOOD_CONNECTION_CODE = "200";
     public static final String GOOD_CODE = "201";
-    public static final String SHARE_FILES_CODE ="801";
-    public static final String MAKE_PRIVATE_FILES_CODE ="802";
+    public static final String SHARE_FILES_CODE = "801";
+    public static final String MAKE_PRIVATE_FILES_CODE = "802";
     public static final String SEND_FILE_INFO_CODE = "900";
     public static final String SEND_FILE_CODE = "901";
-    public static final String GOOD_SEND_FILE_CODE ="902";
-    public static final String DONT_SEND_FILE_CODE ="905";
+    public static final String GOOD_SEND_FILE_CODE = "902";
+    public static final String DONT_SEND_FILE_CODE = "905";
+    public static final String DOWNLOAD_FILE_CODE = "903";
 
     public static final int LOGIN_LENGTH = 32;
     public static final int PASSWORD_LENGTH = 32;
@@ -63,15 +64,15 @@ public class SocketUtil {
      * @throws TimeoutException
      */
     public static String readMessage(AsynchronousSocketChannelProxy channelProxy, final int size, int timeout) throws ExecutionException, InterruptedException, TimeoutException, UnsupportedEncodingException {
-        System.out.println("Try to read message, length: "+size);
-        String message="";
+        System.out.println("Try to read message, length: " + size);
+        String message = "";
         ByteBuffer byteBuffer = ByteBuffer.allocate(size);
         byteBuffer.clear();
-        while (message.length()<size){
-            message +=channelProxy.readString(byteBuffer, timeout, TimeUnit.SECONDS, size-message.length());
+        while (message.length() < size) {
+            message += channelProxy.readString(byteBuffer, timeout, TimeUnit.SECONDS, size - message.length());
             byteBuffer.clear();
         }
-        System.out.println("Message has read -- length: "+message.length()+" message: '"+message+"'");
+        System.out.println("Message has read -- length: " + message.length() + " message: '" + message + "'");
         return message;
 
     }
@@ -88,15 +89,15 @@ public class SocketUtil {
     }
 
     public static String readMessage(SocketChannel socketChannel, final int size) throws ExecutionException, InterruptedException, TimeoutException, IOException {
-        System.out.println("Try to read message, length: "+size);
+        System.out.println("Try to read message, length: " + size);
         String ans = "";
         ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-        while (ans.length()<size) {
+        while (ans.length() < size) {
             byteBuffer.clear();
             int read = socketChannel.read(byteBuffer);
             ans += new String(byteBuffer.array(), 0, read, CHARSET_NAME);
         }
-        System.out.println("Message has read: "+ans);
+        System.out.println("Message has read: " + ans);
         return ans;
     }
 
@@ -107,14 +108,15 @@ public class SocketUtil {
     public static void sendMessage(SocketChannel socketChannel, String message) throws IOException {
         System.out.println("Try to send message: " + message);
         ByteBuffer byteBuffer = ByteBuffer.wrap(message.getBytes(CHARSET_NAME), 0, message.getBytes(CHARSET_NAME).length);
-        String s = new String (message.getBytes(CHARSET_NAME), CHARSET_NAME);
-        System.out.println("Message: "+message+"; byte length: "+message.getBytes(CHARSET_NAME).length+"  :  " +s);
+        String s = new String(message.getBytes(CHARSET_NAME), CHARSET_NAME);
+        System.out.println("Message: " + message + "; byte length: " + message.getBytes(CHARSET_NAME).length + "  :  " + s);
         socketChannel.write(byteBuffer);
         System.out.println("Message has send: " + message);
     }
 
     /**
      * Используется для передачи информации о таблице пользователя и пока работает корректно
+     *
      * @param socketChannel
      * @return
      * @throws IOException
@@ -126,13 +128,13 @@ public class SocketUtil {
         int read;
         do {
             read = socketChannel.read(byteBuffer);
-            if(read>0) {
+            if (read > 0) {
                 stringBuilder.append(new String(byteBuffer.array(), 0, read, CHARSET_NAME));
                 byteBuffer.clear();
                 byteBuffer.flip();
             }
         }
-        while (read>0);
+        while (read > 0);
 
         return stringBuilder.toString();
     }
@@ -154,6 +156,7 @@ public class SocketUtil {
     public static void sendLong(SocketChannel socketChannel, long value) throws IOException {
         sendMessage(socketChannel, format(value, LONG_VALUE_LENGTH));
     }
+
     public static void sendLong(AsynchronousSocketChannel socketChannel, long value) throws IOException {
         sendMessage(socketChannel, format(value, LONG_VALUE_LENGTH));
     }

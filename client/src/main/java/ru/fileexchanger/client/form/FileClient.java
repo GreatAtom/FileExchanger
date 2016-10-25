@@ -40,6 +40,8 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     private JButton shareButton;
     private JButton makePrivateButton;
     private JTable sharedFileTable;
+    private JButton downloadButton;
+    private JButton finishLoadButton;
     private JPanel cards;
     private CardLayout cardLayout;
 
@@ -50,8 +52,16 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     private Property property;
     private List<Integer> fileIdsForShared;
     private List<String> userLoginsForShared;
+    private Integer fileIdForDownload;
+    private String fileNameForDownload;
 
     public FileClient(FileSenderService fileSenderService) {
+        sendFileButton.setEnabled(false);
+        shareButton.setEnabled(false);
+        makePrivateButton.setEnabled(false);
+        downloadButton.setEnabled(false);
+        finishLoadButton.setEnabled(false);
+
         this.fileSenderSerive = fileSenderService;
         cardLayout = new CardLayout();
         cards = new JPanel(cardLayout);
@@ -68,33 +78,38 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
                 File file = fileopen.getSelectedFile();
                 selectedFileTextField.setText(file.getAbsolutePath());
             }
+            sendFileButton.setEnabled(true);
         });
         sendFileButton.addActionListener(e -> {
             try {
                 fileSenderSerive.sendFile(selectedFileTextField.getText());
+                sendFileButton.setEnabled(false);
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
         });
-        updateButton.addActionListener(e-> {
+        updateButton.addActionListener(e -> {
             try {
                 updateUserInfo();
             } catch (Exception e1) {
                 System.out.println("Не удалось обновить таблицу");
             }
         });
-        shareButton.addActionListener(e->{
+        shareButton.addActionListener(e -> {
             fileSenderService.shareFiles(fileIdsForShared, userLoginsForShared);
         });
-        makePrivateButton.addActionListener(e->{
+        makePrivateButton.addActionListener(e -> {
             fileSenderService.makePrivate(fileIdsForShared);
         });
+        downloadButton.addActionListener(e -> {
+            fileSenderService.downloadFile(fileIdForDownload, fileNameForDownload);
+        });
 
-        DefaultTableModel filesTableModel= (DefaultTableModel) filesTable.getModel();
+        DefaultTableModel filesTableModel = (DefaultTableModel) filesTable.getModel();
         initFilesTable(filesTableModel);
         DefaultTableModel usersTableModel = (DefaultTableModel) usersTable.getModel();
         initUsersTable(usersTableModel);
-        DefaultTableModel sharedFilesTableModel= (DefaultTableModel) sharedFileTable.getModel();
+        DefaultTableModel sharedFilesTableModel = (DefaultTableModel) sharedFileTable.getModel();
         initSharedFilesTable(sharedFilesTableModel);
     }
 
@@ -103,24 +118,22 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         java.util.List<UserFileEnity> files = userInfo.getFileEnityList();
         DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
         removeRows(model);
-        files.forEach(f ->
-                model.addRow(f.toArray(true))
-        );
+        files.forEach(f -> model.addRow(f.toArray(true)));
 
         List<String> users = userInfo.getUsers();
-        DefaultTableModel usersTableModel= (DefaultTableModel) usersTable.getModel();
+        DefaultTableModel usersTableModel = (DefaultTableModel) usersTable.getModel();
         removeRows(usersTableModel);
-        users.stream().forEach(f->usersTableModel.addRow(new Object[]{f}));
+        users.forEach(f -> usersTableModel.addRow(new Object[]{f}));
 
         List<UserFileEnity> sharedFile = userInfo.getSharedFileEnityList();
-        DefaultTableModel sharedFilesTableModel= (DefaultTableModel) sharedFileTable.getModel();
+        DefaultTableModel sharedFilesTableModel = (DefaultTableModel) sharedFileTable.getModel();
         removeRows(sharedFilesTableModel);
-        sharedFile.stream().forEach(f->sharedFilesTableModel.addRow(f.toArray(true)));
+        sharedFile.forEach(f -> sharedFilesTableModel.addRow(f.toArray(true)));
     }
 
     private void removeRows(DefaultTableModel model) {
         int count = model.getRowCount();
-        for(int i=count-1; i>=0; i--) {
+        for (int i = count - 1; i >= 0; i--) {
             model.removeRow(i);
         }
     }
@@ -137,11 +150,30 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
                 int[] selectedRow = filesTable.getSelectedRows();
 
                 fileIdsForShared = new ArrayList<>();
+
+                if (selectedRow.length > 0) {
+                    shareButton.setEnabled(true);
+                    makePrivateButton.setEnabled(true);
+                } else {
+                    shareButton.setEnabled(false);
+                    makePrivateButton.setEnabled(false);
+                }
+
+                if (selectedRow.length == 1) {
+                    fileIdForDownload = (Integer) filesTable.getValueAt(selectedRow[0], 0);
+                    fileNameForDownload = (String) filesTable.getValueAt(selectedRow[0], 1);
+
+                    downloadButton.setEnabled(true);
+                    finishLoadButton.setEnabled(true);
+                } else {
+                    downloadButton.setEnabled(false);
+                    finishLoadButton.setEnabled(false);
+                }
+
                 for (int i = 0; i < selectedRow.length; i++) {
                     Integer id = (Integer) filesTable.getValueAt(selectedRow[i], 0);
                     System.out.println(id);
                 }
-
             }
 
         });
@@ -197,7 +229,9 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         JMenuItem menuOptions = new JMenuItem("Options");
         JMenuItem menuRestart = new JMenuItem("Restart");
 
-        menuOptions.addActionListener(e -> {new Options(property);});
+        menuOptions.addActionListener(e -> {
+            new Options(property);
+        });
         menuRestart.addActionListener(e -> Context.restart());
         menu.add(menuOptions);
         menu.add(menuRestart);
@@ -211,7 +245,7 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         frame.setVisible(true);
         initMenuBar(frame);
         frame.setPreferredSize(new Dimension(600, 400));
-        frame.setSize(new Dimension(400, 300));
+        frame.setSize(new Dimension(400, 500));
     }
 
     @Override

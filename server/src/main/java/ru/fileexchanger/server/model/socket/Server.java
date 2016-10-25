@@ -22,6 +22,7 @@ public class Server extends Thread {
     public static final int BUFFER_SIZE_FOR_FILE = 65536;
     public static final int BUFFER_SIZE = 1024;
     public static final String DEFAULT_FILES_PATH = "data/";
+
     /**
      * List of current connections
      */
@@ -40,7 +41,7 @@ public class Server extends Thread {
 
     public void removeClient(AsynchronousSocketChannel client) {
         mConnections.remove(client);
-     }
+    }
 
     @Override
     public void run() {

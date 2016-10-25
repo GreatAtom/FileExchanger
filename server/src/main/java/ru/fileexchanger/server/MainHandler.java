@@ -48,10 +48,21 @@ public class MainHandler extends Thread {
                 String code = SocketUtil.readMessage(socketChannel, 3, 60 * 15);
                 ServerMain.log("cod: " + code);
                 switch (code) {
-                    case SocketUtil.SEND_FILE_CODE: readFile(); break;
-                    case SocketUtil.SEND_FILE_INFO_CODE: sendFilesInfo(); break;
-                    case SocketUtil.MAKE_PRIVATE_FILES_CODE: makePrivateFiles(); break;
-                    case SocketUtil.SHARE_FILES_CODE: shareFiles(); break;
+                    case SocketUtil.SEND_FILE_CODE:
+                        readFile();
+                        break;
+                    case SocketUtil.SEND_FILE_INFO_CODE:
+                        sendFilesInfo();
+                        break;
+                    case SocketUtil.MAKE_PRIVATE_FILES_CODE:
+                        makePrivateFiles();
+                        break;
+                    case SocketUtil.SHARE_FILES_CODE:
+                        shareFiles();
+                        break;
+                    case SocketUtil.DOWNLOAD_FILE_CODE:
+                        sendFileForDowload();
+                        break;
                 }
             }
         } catch (Exception e) {
@@ -73,9 +84,17 @@ public class MainHandler extends Thread {
         commonDao.makePrivate(sharedForm.getFilesIds());
     }
 
+
+    private void sendFileForDowload() throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        String json = readJson();
+        UserFileEnity userFileEnity = new Gson().fromJson(json, UserFileEnity.class);
+        ServerMain.log("Good JSON");
+        sendFile(new File(client.getFilePathById(userFileEnity.getId())), userFileEnity.getFileName());
+    }
+
     private String readJson() throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
         long length = SocketUtil.readLong(socketChannel);
-        String json =  SocketUtil.readMessage(socketChannel, (int)length);
+        String json = SocketUtil.readMessage(socketChannel, (int) length);
         SocketUtil.sendMessage(socketChannel.getSocketChannel(), SocketUtil.GOOD_CODE);
         return json;
     }
@@ -104,10 +123,10 @@ public class MainHandler extends Thread {
 
     private List<UserFileEnity> getSharedFilesByLogin(String login) throws SQLException {
         List<UserFileEnity> files = commonDao.loadSharedFilesForUsers(login);
-        files.stream().forEach(f->{
+        files.forEach(f -> {
             String filePath = client.getFilePathById(f.getId());
             File file = new File(filePath);
-            if(file.isFile()){
+            if (file.isFile()) {
                 f.setDownloadSize(file.length());
             }
         });
@@ -116,10 +135,10 @@ public class MainHandler extends Thread {
 
     private List<UserFileEnity> getUserFilesEnitry(Client client) throws SQLException {
         List<UserFileEnity> files = commonDao.loadUserFile(client.getmLogin());
-        files.stream().forEach(f->{
+        files.forEach(f -> {
             String filePath = client.getFilePathById(f.getId());
             File file = new File(filePath);
-            if(file.isFile()){
+            if (file.isFile()) {
                 f.setDownloadSize(file.length());
             }
         });
@@ -136,7 +155,7 @@ public class MainHandler extends Thread {
             String fileName = SocketUtil.readMessage(socketChannel, SocketUtil.FILE_NAME_LENGTH).trim();
             long fileSize = Long.valueOf(SocketUtil.readMessage(socketChannel, SocketUtil.FILE_SIZE_LENGTH).trim());
             long id = commonDao.insertFile(client.getmLogin(), fileName, fileSize);
-            ServerMain.log(fileName + " " + fileSize+" id: "+id);
+            ServerMain.log(fileName + " " + fileSize + " id: " + id);
 
             try (RandomAccessFile aFile = new RandomAccessFile(client.getFilePathById(id), "rw")) {
                 ByteBuffer inputBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE_FOR_FILE);
@@ -164,6 +183,35 @@ public class MainHandler extends Thread {
                 e1.printStackTrace();
             }
             e.printStackTrace();
+        }
+    }
+
+    private void sendFile(File file, String fileName) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+        ServerMain.log("Try to send file to client: " + file.getName());
+        SocketUtil.sendMessage(socketChannel.getSocketChannel(), SocketUtil.format(fileName, SocketUtil.FILE_NAME_LENGTH));
+        SocketUtil.sendMessage(socketChannel.getSocketChannel(), SocketUtil.format(file.length(), SocketUtil.FILE_SIZE_LENGTH));
+
+        RandomAccessFile aFile = new RandomAccessFile(file, "r");
+        FileChannel inChannel = aFile.getChannel();
+
+        String code = SocketUtil.readMessage(socketChannel, 3, 60 * 15);
+        if (code.equals(SocketUtil.GOOD_SEND_FILE_CODE)) {
+            ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE_FOR_FILE);
+            while (inChannel.read(buffer) > 0) {
+                buffer.flip();
+                socketChannel.getSocketChannel().write(buffer);
+                ServerMain.log("qqqq");
+                buffer.clear();
+            }
+            aFile.close();
+
+            String mess = "";
+            ServerMain.log("Try to read answer from client");
+            while (!mess.equals(SocketUtil.GOOD_CODE)) {
+                mess = SocketUtil.readMessage(socketChannel, 3, 60 * 15);
+            }
+        } else {
+            ServerMain.log("client is not ready to receive file");
         }
     }
 }

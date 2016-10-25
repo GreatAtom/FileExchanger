@@ -22,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 public class FileSenderService {
 
     private static final int FILE_BUFFER_SIZE = 65536;
+    public static final String DEFAULT_CLIENT_FILES_PATH = "clientData/";
     private SocketChannel socketChannel;
     private UserInfo userInfo;
     private volatile boolean emptyChanel = true;
@@ -29,7 +30,7 @@ public class FileSenderService {
     private Informer informer;
 
     public void sendFile(String filePath) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        if(emptyChanel) {
+        if (emptyChanel) {
             emptyChanel = false;
             new Thread(() -> {
                 try {
@@ -51,8 +52,7 @@ public class FileSenderService {
                 } catch (TimeoutException e) {
                     e.printStackTrace();
                     writeInfo("Ошибка. Передача файлов прервана");
-                }
-                finally {
+                } finally {
                     emptyChanel = true;
                 }
             }).start();
@@ -74,18 +74,21 @@ public class FileSenderService {
 
     /**
      * Запрашивает у сервера список файлов юзера
+     *
      * @return
      * @throws IOException
      */
     public UserInfo getUpdatedUserInfo() throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        if(!emptyChanel){ return userInfo;}
+        if (!emptyChanel) {
+            return userInfo;
+        }
         System.out.println("Try to read File Info");
         SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_INFO_CODE);
         //String userInfoString = SocketUtil.readMessage(socketChannel);
         long size = SocketUtil.readLong(socketChannel);
-        String userInfoString = SocketUtil.readMessage(socketChannel, (int)size);
-        System.out.println("File info has read:\n"+ userInfoString);
-        userInfo =  new Gson().fromJson(userInfoString, UserInfo.class);
+        String userInfoString = SocketUtil.readMessage(socketChannel, (int) size);
+        System.out.println("File info has read:\n" + userInfoString);
+        userInfo = new Gson().fromJson(userInfoString, UserInfo.class);
         return userInfo;
     }
 
@@ -96,7 +99,9 @@ public class FileSenderService {
      * @return
      */
     private SocketChannel createChannel(String login, String password, String host, int port) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        if(!emptyChanel){ return null;}
+        if (!emptyChanel) {
+            return null;
+        }
         SocketChannel socketChannel = SocketChannel.open();
         SocketAddress socketAddress = new InetSocketAddress(host, port);
         socketChannel.connect(socketAddress);
@@ -105,11 +110,11 @@ public class FileSenderService {
         SocketUtil.sendMessage(socketChannel, SocketUtil.format(password, SocketUtil.PASSWORD_LENGTH));
         System.out.println("Try to read aswer from server");
         String mess = SocketUtil.readCode(socketChannel);
-        if(mess.equals(SocketUtil.GOOD_CONNECTION_CODE)) {
+        if (mess.equals(SocketUtil.GOOD_CONNECTION_CODE)) {
             System.out.println("Correct login and password");
             return socketChannel;
         } else {
-            System.out.println("Message '"+mess+"' not equals ACCESS_IS_ALLOWED");
+            System.out.println("Message '" + mess + "' not equals ACCESS_IS_ALLOWED");
             System.out.println("Incorrect login or password");
             socketChannel.close();
             throw new AccessDeniedException("Incorrect login or password");
@@ -121,10 +126,47 @@ public class FileSenderService {
         System.out.println("Chanel has created");
     }
 
+    private void readFileFromServer() {
+        File theDir = new File(DEFAULT_CLIENT_FILES_PATH);
+        if (!theDir.exists()) theDir.mkdir();
+
+        System.out.println("receive file from file");
+        try {
+            String fileName = SocketUtil.readMessage(socketChannel, SocketUtil.FILE_NAME_LENGTH).trim();
+            long fileSize = Long.valueOf(SocketUtil.readMessage(socketChannel, SocketUtil.FILE_SIZE_LENGTH).trim());
+            System.out.println(fileName + " " + fileSize);
+
+            try (RandomAccessFile aFile = new RandomAccessFile(DEFAULT_CLIENT_FILES_PATH + fileName, "rw")) {
+                ByteBuffer inputBuffer = ByteBuffer.allocateDirect(FILE_BUFFER_SIZE);
+                FileChannel fileChannel = aFile.getChannel();
+
+                long readBytes = 0;
+                SocketUtil.sendMessage(socketChannel, SocketUtil.GOOD_SEND_FILE_CODE);
+                do {
+                    long read = socketChannel.read(inputBuffer);
+                    readBytes += (read > 0) ? read : 0;
+                    System.out.println("read=" + read + "; readBytes=" + readBytes);
+                    inputBuffer.flip();
+                    fileChannel.write(inputBuffer);
+                    inputBuffer.clear();
+                } while ((readBytes < fileSize));
+                System.out.println("File has received");
+            } catch (IOException e) {
+
+            }
+            SocketUtil.sendMessage(socketChannel, SocketUtil.GOOD_CODE);
+        } catch (Exception e) {
+            try {
+                SocketUtil.sendMessage(socketChannel, SocketUtil.DONT_SEND_FILE_CODE);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            e.printStackTrace();
+        }
+    }
 
     private void sendFile(File file) throws IOException, InterruptedException, ExecutionException, TimeoutException {
-
-        System.out.println("Try to send file: "+file.getName());
+        System.out.println("Try to send file: " + file.getName());
         String fileName = file.getName();
         SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_CODE);
         SocketUtil.sendMessage(socketChannel, SocketUtil.format(fileName, SocketUtil.FILE_NAME_LENGTH));
@@ -137,7 +179,7 @@ public class FileSenderService {
         FileChannel inChannel = aFile.getChannel();
         //inChannel.position(completeFileSize);//// TODO: 12.10.2016 проверить
         String code = SocketUtil.readCode(socketChannel);
-        if(code.equals(SocketUtil.GOOD_SEND_FILE_CODE)) {
+        if (code.equals(SocketUtil.GOOD_SEND_FILE_CODE)) {
             ByteBuffer buffer = ByteBuffer.allocate(FILE_BUFFER_SIZE);
             while (inChannel.read(buffer) > 0) {
                 buffer.flip();
@@ -149,7 +191,7 @@ public class FileSenderService {
 
             String mess = "";
             System.out.println("Try to read answer from server");
-            while (!mess.equals(SocketUtil.GOOD_CODE)){
+            while (!mess.equals(SocketUtil.GOOD_CODE)) {
                 mess = SocketUtil.readCode(socketChannel);
             }
         } else {
@@ -158,25 +200,18 @@ public class FileSenderService {
     }
 
     public void shareFiles(List<Integer> fileIdsForShared, List<String> userLoginsForShared) {
-        if(Common.isEmpty(fileIdsForShared) || Common.isEmpty(userLoginsForShared)) {
+        if (Common.isEmpty(fileIdsForShared) || Common.isEmpty(userLoginsForShared)) {
             System.out.println("Not selected files ids or users");
             return;
         }
-        if(emptyChanel) {
+        if (emptyChanel) {
             emptyChanel = false;
             try {
                 shareFilesProxy(fileIdsForShared, userLoginsForShared);
                 emptyChanel = true;
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
                 e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (TimeoutException e) {
-                e.printStackTrace();
-            }
-            finally {
+            } finally {
                 emptyChanel = true;
             }
         }
@@ -194,25 +229,18 @@ public class FileSenderService {
     }
 
     public void makePrivate(List<Integer> fileIdsForShared) {
-        if(Common.isEmpty(fileIdsForShared)) {
+        if (Common.isEmpty(fileIdsForShared)) {
             System.out.println("Not selected files ids");
             return;
         }
-        if(emptyChanel) {
+        if (emptyChanel) {
             emptyChanel = false;
             try {
                 makePrivateProxy(fileIdsForShared);
                 emptyChanel = true;
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
                 e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (TimeoutException e) {
-                e.printStackTrace();
-            }
-            finally {
+            } finally {
                 emptyChanel = true;
             }
         }
@@ -225,12 +253,44 @@ public class FileSenderService {
         SocketUtil.sendMessage(socketChannel, SocketUtil.MAKE_PRIVATE_FILES_CODE);
         SocketUtil.sendLong(socketChannel, sharJson.length());
         SocketUtil.sendMessage(socketChannel, sharJson);
-        String code =  SocketUtil.readCode(socketChannel);
+        String code = SocketUtil.readCode(socketChannel);
+    }
+
+    public void downloadFile(Integer fileIdForDownload, String fileNameForDownload) {
+        if (fileIdForDownload == null) {
+            System.out.println("Not selected files ids");
+            return;
+        }
+        if (emptyChanel) {
+            emptyChanel = false;
+            try {
+                downloadFileProxy(fileIdForDownload, fileNameForDownload);
+                emptyChanel = true;
+            } catch (IOException | InterruptedException | ExecutionException | TimeoutException e) {
+                e.printStackTrace();
+            } finally {
+                emptyChanel = true;
+            }
+        }
+    }
+
+    private void downloadFileProxy(Integer fileIdForDownload, String fileNameForDownload) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+        UserFileEnity userFileEnity = new UserFileEnity();
+        userFileEnity.setId(fileIdForDownload);
+        userFileEnity.setFileName(fileNameForDownload);
+        String fileJson = new Gson().toJson(userFileEnity);
+        SocketUtil.sendMessage(socketChannel, SocketUtil.DOWNLOAD_FILE_CODE);
+        SocketUtil.sendLong(socketChannel, fileJson.length());
+        SocketUtil.sendMessage(socketChannel, fileJson);
+        String code = SocketUtil.readCode(socketChannel);
+        readFileFromServer();
     }
 
     public interface Informer {
         void writeMessage(String message);
+
         void fileHasSend();
+
         void errorOfSendingFile();
     }
 

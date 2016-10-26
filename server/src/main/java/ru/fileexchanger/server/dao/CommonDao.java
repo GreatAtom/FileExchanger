@@ -1,6 +1,5 @@
 package ru.fileexchanger.server.dao;
 
-import org.omg.CORBA.PUBLIC_MEMBER;
 import ru.fileexchanger.common.json.UserFileEnity;
 
 import java.sql.*;
@@ -11,7 +10,7 @@ import java.util.List;
  * Created by Dmitry on 13.10.2016.
  */
 public class CommonDao {
-    private static String dbURL = "jdbc:derby://localhost:1527/fileexchanger;create=true";
+    private static String dbURL = "jdbc:derby:D:/Anton/разработки/java/FileExchanger/db/fileexchanger";
     private static String TABLE_USER_FILES = "USERFILES";
     // jdbc Connection
     private static Connection connection = null; //one connection for all user
@@ -143,8 +142,8 @@ public class CommonDao {
     }
 
     public void sharedFiles(List<Integer> filesIds, List<String> logins) {
-        filesIds.stream().forEach(fileId->{
-            logins.stream().forEach(login->{
+        filesIds.forEach(fileId->{
+            logins.forEach(login->{
                 try {
                     sharedFile(fileId, login);
                 } catch (SQLException e) {
@@ -164,7 +163,7 @@ public class CommonDao {
 
 
     public void makePrivate(List<Integer> filesIds) {
-        filesIds.stream().forEach(id -> {
+        filesIds.forEach(id -> {
             try {
                 makePrivate(id);
             } catch (SQLException e) {
@@ -178,5 +177,13 @@ public class CommonDao {
         preparedStatement.setInt(1, id);
         preparedStatement.executeUpdate();
         System.out.println("File with id='"+id+"' is private");
+    }
+
+    public long geFileSize(long id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement("select fileSize from userFiles where fileId=?");
+        preparedStatement.setLong(1, id);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        resultSet.next();
+        return resultSet.getLong(1);
     }
 }

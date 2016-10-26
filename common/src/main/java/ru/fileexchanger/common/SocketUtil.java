@@ -22,6 +22,7 @@ public class SocketUtil {
     public static final String MAKE_PRIVATE_FILES_CODE = "802";
     public static final String SEND_FILE_INFO_CODE = "900";
     public static final String SEND_FILE_CODE = "901";
+    public static final String SEND_EXIST_FILE_CODE = "904";
     public static final String GOOD_SEND_FILE_CODE = "902";
     public static final String DONT_SEND_FILE_CODE = "905";
     public static final String DOWNLOAD_FILE_CODE = "903";

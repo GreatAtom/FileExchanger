@@ -29,13 +29,13 @@ public class FileSenderService {
     private Property property;
     private Informer informer;
 
-    public void sendFile(String filePath) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    public void sendFile(String filePath, UserInfo userInfo) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         if (emptyChanel) {
             emptyChanel = false;
             new Thread(() -> {
                 try {
                     writeInfo("Идёт загрузка");
-                    sendFileProxy(filePath);
+                    sendFileProxy(filePath, userInfo);
                     emptyChanel = true;
                     informer.fileHasSend();
                     writeInfo("Загрузка завершена");
@@ -64,12 +64,28 @@ public class FileSenderService {
 
     }
 
-    private void sendFileProxy(String filePath) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    private void sendFileProxy(String filePath, UserInfo userInfo) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         File file = new File(filePath);
         if (!file.isFile()) {
             throw new FileNotFoundException("Файла по указанному пути не существует");
         }
-        sendFile(file);
+
+        UserFileEnity sameFile = userInfo.getFileEnityList()
+                .stream()
+                .filter(e -> e.getFileName().equals(file.getName()))
+                .findFirst()
+                .orElse(null);
+
+        Long sizeSameFile = (sameFile != null && file.length() == sameFile.getFileSize()) ? sameFile.getDownloadSize() : 0;
+        int id = -1;
+        if(sameFile!=null){
+            id = sameFile.getId();
+            if(sizeSameFile==sameFile.getFileSize()){
+                writeInfo("Файл уже полностью загружён");
+                return;
+            }
+        }
+        sendFile(file, sizeSameFile, id);
     }
 
     /**
@@ -145,7 +161,7 @@ public class FileSenderService {
                 do {
                     long read = socketChannel.read(inputBuffer);
                     readBytes += (read > 0) ? read : 0;
-                    System.out.println("read=" + read + "; readBytes=" + readBytes);
+                    //System.out.println("read=" + read + "; readBytes=" + readBytes+"; fileSize="+fileSize);
                     inputBuffer.flip();
                     fileChannel.write(inputBuffer);
                     inputBuffer.clear();
@@ -165,19 +181,20 @@ public class FileSenderService {
         }
     }
 
-    private void sendFile(File file) throws IOException, InterruptedException, ExecutionException, TimeoutException {
+    private void sendFile(File file, Long completeFileSize, int id) throws IOException, InterruptedException, ExecutionException, TimeoutException {
         System.out.println("Try to send file: " + file.getName());
         String fileName = file.getName();
-        SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_CODE);
-        SocketUtil.sendMessage(socketChannel, SocketUtil.format(fileName, SocketUtil.FILE_NAME_LENGTH));
-        SocketUtil.sendMessage(socketChannel, SocketUtil.format(file.length(), SocketUtil.FILE_SIZE_LENGTH));
-
-        //// TODO: 12.10.2016 получить инфо о размере файла
-        long completeFileSize = 0;
-
+        if(completeFileSize==null || completeFileSize==0) {
+            SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_FILE_CODE);
+            SocketUtil.sendMessage(socketChannel, SocketUtil.format(fileName, SocketUtil.FILE_NAME_LENGTH));
+            SocketUtil.sendMessage(socketChannel, SocketUtil.format(file.length(), SocketUtil.FILE_SIZE_LENGTH));
+        } else {
+            SocketUtil.sendMessage(socketChannel, SocketUtil.SEND_EXIST_FILE_CODE);
+            SocketUtil.sendMessage(socketChannel, SocketUtil.format(id, 6));
+        }
         RandomAccessFile aFile = new RandomAccessFile(file, "r");
         FileChannel inChannel = aFile.getChannel();
-        //inChannel.position(completeFileSize);//// TODO: 12.10.2016 проверить
+        inChannel.position(completeFileSize);//// TODO: 12.10.2016 проверить
         String code = SocketUtil.readCode(socketChannel);
         if (code.equals(SocketUtil.GOOD_SEND_FILE_CODE)) {
             ByteBuffer buffer = ByteBuffer.allocate(FILE_BUFFER_SIZE);
@@ -263,6 +280,7 @@ public class FileSenderService {
         }
         if (emptyChanel) {
             emptyChanel = false;
+            new Thread(()->{
             try {
                 downloadFileProxy(fileIdForDownload, fileNameForDownload);
                 emptyChanel = true;
@@ -271,6 +289,7 @@ public class FileSenderService {
             } finally {
                 emptyChanel = true;
             }
+            }).start();
         }
     }
 

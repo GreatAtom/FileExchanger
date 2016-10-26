@@ -49,7 +49,10 @@ public class MainHandler extends Thread {
                 ServerMain.log("cod: " + code);
                 switch (code) {
                     case SocketUtil.SEND_FILE_CODE:
-                        readFile();
+                        readNewFile();
+                        break;
+                    case SocketUtil.SEND_EXIST_FILE_CODE:
+                        readExistFile();
                         break;
                     case SocketUtil.SEND_FILE_INFO_CODE:
                         sendFilesInfo();
@@ -149,24 +152,34 @@ public class MainHandler extends Thread {
         return commonDao.loadUsers(login);
     }
 
-    private void readFile() {
+    private void readNewFile() throws SQLException, InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException {
+        String fileName = SocketUtil.readMessage(socketChannel, SocketUtil.FILE_NAME_LENGTH).trim();
+        long fileSize = Long.valueOf(SocketUtil.readMessage(socketChannel, SocketUtil.FILE_SIZE_LENGTH).trim());
+        long id = commonDao.insertFile(client.getmLogin(), fileName, fileSize);
+        readFile(0, id, fileSize);
+    }
+
+    private void readExistFile() throws InterruptedException, ExecutionException, TimeoutException, UnsupportedEncodingException, SQLException {
+        long id = Long.valueOf(SocketUtil.readMessage(socketChannel, 6, 60 * 15).trim());
+        File file = new File(client.getFilePathById(id));
+        long fileSize = commonDao.geFileSize(id);
+        long fileLength = file.length();
+        readFile(fileLength, id, fileSize);
+    }
+
+    private void readFile(long downloaded, long fileId, long fileSize) {
         ServerMain.log("receive file");
         try {
-            String fileName = SocketUtil.readMessage(socketChannel, SocketUtil.FILE_NAME_LENGTH).trim();
-            long fileSize = Long.valueOf(SocketUtil.readMessage(socketChannel, SocketUtil.FILE_SIZE_LENGTH).trim());
-            long id = commonDao.insertFile(client.getmLogin(), fileName, fileSize);
-            ServerMain.log(fileName + " " + fileSize + " id: " + id);
-
-            try (RandomAccessFile aFile = new RandomAccessFile(client.getFilePathById(id), "rw")) {
+            try (RandomAccessFile aFile = new RandomAccessFile(client.getFilePathById(fileId), "rw")) {
                 ByteBuffer inputBuffer = ByteBuffer.allocateDirect(BUFFER_SIZE_FOR_FILE);
                 FileChannel fileChannel = aFile.getChannel();
-
-                long readBytes = 0;
+                fileChannel.position(downloaded);
+                long readBytes = downloaded;
                 SocketUtil.sendMessage(socketChannel.getSocketChannel(), SocketUtil.GOOD_SEND_FILE_CODE);
                 do {
                     long read = socketChannel.read(inputBuffer);
                     readBytes += (read > 0) ? read : 0;
-                    ServerMain.log("read=" + read + "; readBytes=" + readBytes);
+                    ServerMain.log("read=" + read + "; readBytes=" + readBytes+"; fileSize="+fileSize);
                     inputBuffer.flip();
                     fileChannel.write(inputBuffer);
                     inputBuffer.clear();
@@ -197,11 +210,14 @@ public class MainHandler extends Thread {
         String code = SocketUtil.readMessage(socketChannel, 3, 60 * 15);
         if (code.equals(SocketUtil.GOOD_SEND_FILE_CODE)) {
             ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE_FOR_FILE);
+            int sumSend = 0;
             while (inChannel.read(buffer) > 0) {
                 buffer.flip();
-                socketChannel.getSocketChannel().write(buffer);
-                ServerMain.log("qqqq");
+                int send = socketChannel.getSocketChannel().write(buffer).get();
+                sumSend+=send;
+                //ServerMain.log("sumSend="+sumSend+";  send="+send);
                 buffer.clear();
+                sleep(1);
             }
             aFile.close();
 

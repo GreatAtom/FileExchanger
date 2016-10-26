@@ -41,7 +41,6 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     private JButton makePrivateButton;
     private JTable sharedFileTable;
     private JButton downloadButton;
-    private JButton finishLoadButton;
     private JPanel cards;
     private CardLayout cardLayout;
 
@@ -54,13 +53,13 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     private List<String> userLoginsForShared;
     private Integer fileIdForDownload;
     private String fileNameForDownload;
+    private UserInfo userInfo;
 
     public FileClient(FileSenderService fileSenderService) {
         sendFileButton.setEnabled(false);
         shareButton.setEnabled(false);
         makePrivateButton.setEnabled(false);
         downloadButton.setEnabled(false);
-        finishLoadButton.setEnabled(false);
 
         this.fileSenderSerive = fileSenderService;
         cardLayout = new CardLayout();
@@ -82,7 +81,7 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         });
         sendFileButton.addActionListener(e -> {
             try {
-                fileSenderSerive.sendFile(selectedFileTextField.getText());
+                fileSenderSerive.sendFile(selectedFileTextField.getText(), userInfo);
                 sendFileButton.setEnabled(false);
             } catch (Exception e1) {
                 e1.printStackTrace();
@@ -114,7 +113,7 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     }
 
     private void updateUserInfo() throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        UserInfo userInfo = fileSenderSerive.getUpdatedUserInfo();
+        userInfo = fileSenderSerive.getUpdatedUserInfo();
         java.util.List<UserFileEnity> files = userInfo.getFileEnityList();
         DefaultTableModel model = (DefaultTableModel) filesTable.getModel();
         removeRows(model);
@@ -164,10 +163,8 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
                     fileNameForDownload = (String) filesTable.getValueAt(selectedRow[0], 1);
 
                     downloadButton.setEnabled(true);
-                    finishLoadButton.setEnabled(true);
                 } else {
                     downloadButton.setEnabled(false);
-                    finishLoadButton.setEnabled(false);
                 }
 
                 for (int i = 0; i < selectedRow.length; i++) {

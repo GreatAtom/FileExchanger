@@ -41,6 +41,7 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     private JButton makePrivateButton;
     private JTable sharedFileTable;
     private JButton downloadButton;
+    private JButton downloadPublicButton;
     private JPanel cards;
     private CardLayout cardLayout;
 
@@ -53,6 +54,8 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
     private List<String> userLoginsForShared;
     private Integer fileIdForDownload;
     private String fileNameForDownload;
+    private Integer fileIdForDownloadPublic;
+    private String fileNameForDownloadPublic;
     private UserInfo userInfo;
 
     public FileClient(FileSenderService fileSenderService) {
@@ -60,6 +63,7 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         shareButton.setEnabled(false);
         makePrivateButton.setEnabled(false);
         downloadButton.setEnabled(false);
+        downloadPublicButton.setEnabled(false);
 
         this.fileSenderSerive = fileSenderService;
         cardLayout = new CardLayout();
@@ -103,7 +107,9 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         downloadButton.addActionListener(e -> {
             fileSenderService.downloadFile(fileIdForDownload, fileNameForDownload);
         });
-
+        downloadPublicButton.addActionListener(e -> {
+            fileSenderService.downloadFile(fileIdForDownloadPublic, fileNameForDownloadPublic);
+        });
         DefaultTableModel filesTableModel = (DefaultTableModel) filesTable.getModel();
         initFilesTable(filesTableModel);
         DefaultTableModel usersTableModel = (DefaultTableModel) usersTable.getModel();
@@ -142,8 +148,43 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
         for (int i = 0; i < columnNames.length; i++) {
             model.addColumn(columnNames[i]);
         }
+        ListSelectionModel cellSelectionModel = sharedFileTable.getSelectionModel();
+        cellSelectionModel.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                int[] selectedRow = sharedFileTable.getSelectedRows();
+                Integer id = (Integer) sharedFileTable.getValueAt(selectedRow[0], 0);
+                fileIdForDownloadPublic = id;
+                fileNameForDownloadPublic = (String) sharedFileTable.getValueAt(selectedRow[0], 1);
+                downloadPublicButton.setEnabled(true);
+            }
+
+        });
+
+    }
+
+
+    private void initFilesTable(DefaultTableModel model) {
+        String[] columnNames = {"id", "File Name", "Size", "Download Size", "Status"};
+        for (int i = 0; i < columnNames.length; i++) {
+            model.addColumn(columnNames[i]);
+        }
         ListSelectionModel cellSelectionModel = filesTable.getSelectionModel();
         cellSelectionModel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
+            public void valueChanged(ListSelectionEvent e) {
+                int[] selectedRow = filesTable.getSelectedRows();
+
+                fileIdsForShared = new ArrayList<>();
+                for (int i = 0; i < selectedRow.length; i++) {
+                    Integer id = (Integer) filesTable.getValueAt(selectedRow[i], 0);
+                    fileIdsForShared.add(id);
+                }
+
+            }
+
+        });
+
         cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
             public void valueChanged(ListSelectionEvent e) {
                 int[] selectedRow = filesTable.getSelectedRows();
@@ -171,29 +212,6 @@ public class FileClient implements Login.LoginListener, FileSenderService.Inform
                     Integer id = (Integer) filesTable.getValueAt(selectedRow[i], 0);
                     System.out.println(id);
                 }
-            }
-
-        });
-    }
-
-
-    private void initFilesTable(DefaultTableModel model) {
-        String[] columnNames = {"id", "File Name", "Size", "Download Size", "Status"};
-        for (int i = 0; i < columnNames.length; i++) {
-            model.addColumn(columnNames[i]);
-        }
-        ListSelectionModel cellSelectionModel = filesTable.getSelectionModel();
-        cellSelectionModel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
-            public void valueChanged(ListSelectionEvent e) {
-                int[] selectedRow = filesTable.getSelectedRows();
-
-                fileIdsForShared = new ArrayList<>();
-                for (int i = 0; i < selectedRow.length; i++) {
-                    Integer id = (Integer) filesTable.getValueAt(selectedRow[i], 0);
-                    fileIdsForShared.add(id);
-                }
-
             }
 
         });
